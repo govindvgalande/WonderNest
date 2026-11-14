@@ -60,6 +60,9 @@ test('usage bounds and limits, no negative usage',()=>{
   assert.equal(canPlay({profileUsed:0,householdUsed:1200,sessionUsed:0,dailyLimitMin:15,householdLimitMin:20,sessionLimitMin:5,paused:false}),false);
   assert.equal(canPlay({profileUsed:0,householdUsed:0,sessionUsed:300,dailyLimitMin:15,householdLimitMin:20,sessionLimitMin:5,paused:false}),false);
   assert.equal(canPlay({profileUsed:0,householdUsed:0,sessionUsed:0,dailyLimitMin:15,householdLimitMin:20,sessionLimitMin:5,paused:true}),false);
+  // Switching from child A to child B does not reset the household session clock.
+  assert.equal(canPlay({profileUsed:0,householdUsed:0,sessionUsed:0,householdSessionUsed:300,dailyLimitMin:15,householdLimitMin:20,sessionLimitMin:5,paused:false}),false);
+  assert.equal(canPlay({profileUsed:0,householdUsed:0,sessionUsed:0,householdSessionUsed:299,dailyLimitMin:15,householdLimitMin:20,sessionLimitMin:5,paused:false}),true);
   assert.match(dayKey(Date.now()),/^\d{4}-\d{2}-\d{2}$/);
 });
 test('reward requirements deterministic, no unintended awards',()=>{
