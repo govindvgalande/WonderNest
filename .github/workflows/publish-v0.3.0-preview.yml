@@ -1,0 +1,43 @@
+name: Publish WonderNest v0.3.0 Test APK
+on:
+  workflow_run:
+    workflows:
+      - Build WonderNest Standalone APK from Verified Source
+    types:
+      - completed
+permissions:
+  actions: read
+  contents: write
+jobs:
+  publish-preview:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_sha == '3948ba84edff694a14c357ff4435d1c1e8f84f04' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Retrieve and verify current standalone APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          mkdir -p package
+          gh run download "$RUN_ID" --repo "$GH_REPO" --name WonderNest-v0.3.0-Installable-APK --dir package
+          test -s package/app-release.apk
+          unzip -Z -1 package/app-release.apk | grep -F 'assets/index.android.bundle'
+          cp package/app-release.apk WonderNest-v0.3.0.apk
+          zip -9 -j WonderNest-v0.3.0-Compressed.zip WonderNest-v0.3.0.apk >/dev/null
+          sha256sum WonderNest-v0.3.0.apk WonderNest-v0.3.0-Compressed.zip
+          ls -lh WonderNest-v0.3.0.*
+      - name: Create clearly labeled Android preview release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release create v0.3.0-preview \
+            WonderNest-v0.3.0.apk WonderNest-v0.3.0-Compressed.zip \
+            --repo "$GH_REPO" --target "3948ba84edff694a14c357ff4435d1c1e8f84f04" \
+            --title "WonderNest v0.3.0 - Android Test APK" \
+            --notes "Pre-release test build: introduces real shape-grid reconstruction, sound-first memory with accessible visual clues, a first-time tutorial, improved maze/treasure generation, parent controls, persisted unfinished games, and local languages. Not yet Google Play production-ready: full physical-device E2E, legal/privacy, and accessibility audits outstanding. Installation over older APKs can fail if signing certificates differ; uninstalling deletes local progress." \
+            --prerelease
