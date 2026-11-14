@@ -67,7 +67,7 @@ jobs:
 
       - name: Install project dependencies
         working-directory: ${{ env.APP_DIR }}
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Check types, game logic, database migrations and assets
         working-directory: ${{ env.APP_DIR }}
@@ -99,7 +99,7 @@ jobs:
       - name: Upload WonderNest APK
         uses: actions/upload-artifact@v4
         with:
-          name: WonderNest-v0.3.0-Installable-APK
+          name: WonderNest-v0.4.0-Installable-APK
           path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
