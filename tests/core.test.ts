@@ -28,6 +28,10 @@ for(const age of ['3-5','6-8','9-12'] as const){
         }else assert.ok(evaluateChallenge(c,c.answer));
         unique.add(JSON.stringify(c));
         if(c.mode==='route'||c.mode==='maze'){
+          const pathMax=c.mode==='maze'?(age==='3-5'?5:age==='6-8'?7:8):(age==='3-5'?5:age==='6-8'?8:10);
+          const expectedLength=Math.min(pathMax,3+level-min);
+          assert.equal(c.answer.length,expectedLength,`Incomplete route for ${id}/${age}/${seed}`);
+          assert.equal(new Set(c.answer).size,c.answer.length);
           for(let i=0;i<c.answer.length;i++) assert.equal(allowedNextCell(c,c.answer.slice(0,i),c.answer[i]!),true);
         }
         if(c.mode!=='cards'){
