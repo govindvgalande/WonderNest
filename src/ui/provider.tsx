@@ -15,7 +15,7 @@ export function useApp(){const ctx=useContext(Context);if(!ctx)throw new Error('
 export function AppProvider({children}:{children:React.ReactNode}){
  const pathname=usePathname();const [ready,setReady]=useState(false),[pinExists,setPinExists]=useState(false);
  const [profiles,setProfiles]=useState<Profile[]>([]),[profileId,setProfileId]=useState<string|null>(null),[settings,setSettings]=useState<Settings>(()=>store.getSettings());
- const [used,setUsed]=useState({own:0,total:0,session:0});const lastHeartbeat=useRef(Date.now());const foreground=useRef(AppState.currentState==='active');
+ const [used,setUsed]=useState({own:0,total:0,session:0,householdSession:0});const lastHeartbeat=useRef(Date.now());const foreground=useRef(AppState.currentState==='active');
  const profile=profiles.find(p=>p.id===profileId)||null;
  const reload=useCallback(()=>{
   const list=store.getProfiles();setProfiles(list);const saved=store.getSelectedProfileId();
@@ -53,7 +53,8 @@ export function AppProvider({children}:{children:React.ReactNode}){
  const own=profile?Math.max(0,profile.dailyLimitMin*60-used.own):0;
  const household=Math.max(0,settings.householdLimitMin*60-used.total);
  const session=profile?Math.max(0,profile.sessionLimitMin*60-used.session):0;
- const timeLeftSec=Math.max(0,Math.min(own,household,session));
+ const sharedSession=profile?Math.max(0,profile.sessionLimitMin*60-used.householdSession):0;
+ const timeLeftSec=Math.max(0,Math.min(own,household,session,sharedSession));
  const breakSeconds=Math.max(5,settings.breakReminderMin)*60;
  const breakDue=!!profile&&used.session>=breakSeconds&&used.session%breakSeconds<75;
  const blocked=!!profile&&(!store.isAllowed(profile,settings)||timeLeftSec<=0);
