@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/create-lockfile.yml"
+      - "package.json"
   workflow_dispatch:
 permissions:
   contents: write
