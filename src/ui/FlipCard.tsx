@@ -2,7 +2,7 @@ import React,{useEffect,useRef} from 'react';
 import {Animated,Pressable,StyleSheet,Text} from 'react-native';
 import {C} from './theme';
 import {TOKEN_ICONS} from '../core/catalog';
-import {tokenName} from '../content/i18n';
+import {t,tokenName} from '../content/i18n';
 import type {Locale} from '../core/types';
 export function FlipCard({faceUp,matched,onPress,id,locale,reducedMotion}:{faceUp:boolean;matched:boolean;onPress:()=>void;id:string;locale:Locale;reducedMotion:boolean}){
  const flip=useRef(new Animated.Value(faceUp?1:0)).current;
@@ -12,7 +12,7 @@ export function FlipCard({faceUp,matched,onPress,id,locale,reducedMotion}:{faceU
  },[faceUp,reducedMotion,flip]);
  const backRotate=flip.interpolate({inputRange:[0,1],outputRange:['0deg','180deg']});
  const frontRotate=flip.interpolate({inputRange:[0,1],outputRange:['180deg','360deg']});
- return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={faceUp?tokenName(locale,id):'Hidden card'} accessibilityHint="Tap to reveal" style={styles.wrap}>
+ return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={faceUp?tokenName(locale,id):t(locale,'hiddenCard')} accessibilityHint={t(locale,'revealCardHint')} style={styles.wrap}>
   <Animated.View style={[styles.card,{backgroundColor:C.violet,transform:[{perspective:800},{rotateY:backRotate}]}]}><Text style={styles.icon}>✦</Text></Animated.View>
   <Animated.View style={[styles.card,styles.front,{backgroundColor:matched?C.mint:C.yellow,transform:[{perspective:800},{rotateY:frontRotate}]}]}><Text style={styles.icon}>{TOKEN_ICONS[id]||'⭐'}</Text></Animated.View>
  </Pressable>;
