@@ -180,6 +180,7 @@ export default function Game(){
       {challenge.mode==='multi'?<Action label={t(loc,'submit')} disabled={!chosen.length} onPress={()=>{if(evaluateChallenge(challenge,chosen))complete(true);else{setMistakes(m=>m+1);setFeedback(t(loc,'wrong'));void playTone('wood',a.settings);}}}/>:null}
       {challenge.mode==='sequence'?<Action kind="soft" label={t(loc,'clear')} onPress={()=>setChosen([])}/>:null}
      </Card>:null}
+     {(challenge.mode==='route'||challenge.mode==='maze')&&chosen.length>0?<Action kind="soft" label={t(loc,'clear')} onPress={()=>{setChosen([]);setFeedback('');setHintText('');}}/>:null}
      {feedback?<P style={{color:C.red,textAlign:'center'}}>{feedback}</P>:null}
      {hintText?<Card style={{backgroundColor:C.yellow}}><P>{hintText}</P></Card>:null}
      <Action kind="soft" label={t(loc,'hint')} onPress={useHint}/>
