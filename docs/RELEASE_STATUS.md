@@ -1,40 +1,40 @@
-# WonderNest independent release status — 2026-11-14
+# WonderNest development and release evidence — 2026-11-14
 
-## What was actually executed in the development environment
+## Current product status
 
-- Source created in `/mnt/data/WonderNest` with Expo SDK 58 / React Native 0.88 / Expo Router configuration targeting Android API 36 via `expo-build-properties`.
-- **44 Node.js tests PASSED**: 12 game types × 3 age groups × 250 seeded challenges per group (9,000 generated challenges), seeded reproducibility, validation, adaptation limits, incorrect-answer checks, local-time rules, reward rules, 3-language catalog checks and simulated parent PIN rate limits/recovery.
-- **4 Python `sqlite3` tests PASSED**: actual schema extraction from source, upgrade to schema v2, cascading deletes, uniqueness/upserts and transactional rollback.
-- **4 further Python asset/config contract tests PASSED**: PNG dimensions, synthesized WAV validity, Android API 36 and permission/backup guardrail configuration, EAS output types. This verifies source assets and config only, not a native build.
-- `tsc --noEmit --target es2022 --module commonjs --strict --noUncheckedIndexedAccess src/core/*.ts src/content/i18n.ts` PASSED.
-- TypeScript/TSX parse check passed (this checks syntax, NOT React Native types or actual build).
-- Original images, 6 note sounds, celebration sound and optional loopable music were synthesized/drawn locally and stored in `assets`.
-- Full raw output: `docs/test-run-latest.txt`.
+**An installable standalone Android test APK exists and a parent/child user reported that the app opens and runs on a real Android phone.** This is important device feedback, not a formal end-to-end functionality test.
 
-## Critical limits on this audit
+The application is **not yet verified 100% feature-complete or ready for a public Google Play release**. Keep signed production distribution and compliance separate from working preview builds.
 
-- `npm view expo` failed with `EAI_AGAIN registry.npmjs.org`. Therefore dependencies were not downloaded; full `npm install`, `npm run check`, Expo Doctor, Metro bundling, Android prebuild and an APK/AAB build were **NOT** executed.
-- Android SDK is absent from the environment, and no EAS account or app-signing access was provided. Android build/test verification is **BLOCKED**.
-- Real-device testing, performance profiling, accessibility audit, Android permission/manifest audit, application freeze/crash test and app-store submission were **NOT TESTED**.
-- All screen functionality and routing remain **NOT TESTED in a native app** despite implemented source code.
-- Offline English/Hindi/Marathi text catalog has matching keys; system-voice narration for Hindi/Marathi and other locales remains contingent on local device voice availability (not bundled narrated audio).
-- No Play Store screenshots, installable APK, signed production AAB, public privacy policy URL or legal approvals exist yet. Do not claim production readiness or publication.
+## Source and verified automated results
 
-## Outstanding development / hardening
+- Native project: Expo SDK 58 / React Native 0.88 / Expo Router with Android API 37 compilation and target API 36.
+- Build: Android standalone **release-mode** APK; React Native `assets/index.android.bundle` explicitly checked inside APK to prevent "Unable to load script" encountered with the original debug APK.
+- GitHub run `43562585560`: release-mode Android compilation and APK artifact upload **PASS**. The user independently reported the generated standalone APK working on an Android phone.
+- GitHub quality run `43566690691`: npm dependency installation, strict full-project TypeScript check, core property tests, SQLite contract tests, asset/config tests, offline Android JavaScript export **PASS**.
+- This repository now holds editable app source, unlike the original ZIP-only workflow.
+- Source changes after first working APK:
+  - `src/core/generate.ts`: seeded depth-first path generator guarantees the full age-appropriate maze/treasure length rather than silently returning a shorter route. Tested across 12 games × 3 ages × 250 deterministic seeds.
+  - `src/storage/database.ts`: SQLite v3 `active_runs` persists unfinished games; v4 `household_session` tracks cross-profile session time.
+  - `app/play/[id].tsx`: restores saved puzzle and selections after app restarts, clears unfinished state on completion.
+  - `src/ui/provider.tsx` and `src/core/time.ts`: household shared session is enforced to reduce profile-switch bypass.
+  - SQLite v3/v4 and timer edge-case assertions added.
+- GitHub run `43566847269`: recompilation from **current** source launched. Consult its conclusion and `WonderNest-Updated-Standalone-APK` artifact for current build evidence. Do not assume success without checking.
 
-1. Restore network access, resolve/install dependencies, run full TypeScript check and Expo Doctor; align Expo native package versions if needed.
-2. Produce preview APK and launch on at least a low-end Android phone and one tablet; fix all native issues.
-3. Verify SQLite v0→v2 migration, secure-storage PIN logic, OS PIN recovery, background/rest/force-stop time tracking, spoken instructions, and bundled audio on a device.
-4. Conduct screen-reader, large-font, touch target, performance/battery, offline mode, permission and dependency reviews.
-5. Improve all 12 game themes with final custom object graphics and inspect all translated copy for natural age-appropriate usage. Complete and test narration for every advertised voice language or remove the claim.
-6. Verify privacy behavior and third-party SDKs from the **actual release AAB**, not from intentions. Assess COPPA, GDPR and India DPDP with qualified advice.
-7. Clear trademark/naming, obtain a support email and publish a usable privacy policy URL in Play Console.
-8. Create genuine in-app screenshots from the tested build; complete content rating/Data safety and closed test where required.
+## Known requirements still unverified / outstanding
+
+1. Execute and document full flows for each of the 12 games on an Android phone and tablet, including hints, resume, correct/wrong answers, progress/rewards.
+2. Native Android persistence/upgrade tests, including existing installations migrating from schema v2 to v4, app process termination, and device reboot.
+3. Parent PIN lockout/recovery/security bypass testing, break reminders, multi-profile/time-limit behavior, background/foreground and time-change edge cases.
+4. Native accessibility testing (TalkBack, focus traversal, large font, reduced motion), screen sizes, orientation and performance/battery profiling.
+5. Child-friendly original illustrations replacing emoji-dependent puzzle art, mature themed visuals, interaction animation and graphical QA on supported devices.
+6. English, Hindi, Marathi linguistic review. On-device narration depends on installed system voices; offline narration is not guaranteed for every device/language. Do not advertise fully bundled narration yet.
+7. Privacy/permissions and child-directed third-party dependency audit of the final merged Android manifest, qualified jurisdiction-specific legal/policy review, and actual Play Data safety declarations.
+8. Genuine device screenshots, final store listing and trademark checks, public support/privacy URLs, Android App Bundle signing and Play Console account/testing and review.
+9. App launch testing from a dedicated Android emulator and automated UI interaction tests are still needed for full independent verification.
 
 ## Release decision
 
-**BLOCKED FOR PUBLIC RELEASE**. Current output is runnable project source awaiting installation, compilation, device testing, external account actions and compliance review. No completion percentage is supplied because native requirements are unverified.
+**TEST APK: available. PRODUCTION GOOGLE PLAY RELEASE: NOT YET VERIFIED/APPROVED.**
 
-## Continuous integration
-
-`.github/workflows/quality.yml` is a drafted pipeline for dependency installation, full TypeScript check, tests, Expo Doctor and Metro Android export on GitHub. **This workflow has not been run**, because this source project has not been pushed to a GitHub repository and npm cannot be reached in the current environment.
+An APK compiling successfully proves packaging; it does not prove child-safety, accessibility, every button and mini-game, or Play Store readiness. No 100% completion claim or invented percentage is made.
