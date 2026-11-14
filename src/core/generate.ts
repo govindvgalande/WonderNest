@@ -103,7 +103,10 @@ export function generateChallenge(gameId:GameId,ageGroup:AgeGroup,level:number,s
     case 'explorer':{
       const selected=pick(['objects','missing','pattern'] as const,rng);
       const inner=generateChallenge(selected,ageGroup,level,(seed+0xa4093822)>>>0);
-      return {...inner,...base,prompt:'explore'};
+      // Preserve the generated activity's actual instruction type. An Explorer
+      // missing-object round needs the same visible missing-item board and
+      // question as the dedicated game; a generic "explore" prompt hides it.
+      return {...inner,...base};
     }
   }
 }
