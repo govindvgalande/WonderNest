@@ -70,7 +70,7 @@ jobs:
           androidProperties[1].android.compileSdkVersion = 36;
           androidProperties[1].android.targetSdkVersion = 36;
           androidProperties[1].android.buildToolsVersion = '36.0.0';
-          fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\\n');
+          fs.writeFileSync(p, JSON.stringify(j, null, 2));
           NODE
 
       - name: Install project dependencies
