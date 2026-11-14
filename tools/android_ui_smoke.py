@@ -82,6 +82,13 @@ def edit(label, value):
     adb("shell","input","keyevent","KEYCODE_BACK")
     time.sleep(0.7)
 
+def screenshot(filename):
+    with open(filename,"wb") as f:
+        p=subprocess.run(["adb","exec-out","screencap","-p"],stdout=f,stderr=subprocess.PIPE,timeout=50)
+    if p.returncode:
+        raise RuntimeError("Could not capture Android screen")
+    print(f"EVIDENCE: {filename}")
+
 def launch():
     adb("shell","am","force-stop",APP)
     adb("shell","am","start","-n",f"{APP}/.MainActivity")
@@ -99,14 +106,17 @@ def main():
     must_see("Create explorer")
     tap("Create explorer")
     must_see("Your first adventure!")
+    screenshot("WonderNest-guided-tutorial.png")
     print("PASS: Parent PIN setup, local child profile, guided first activity")
     tap("Try Memory Cards")
     must_see("Memory Card Match")
+    screenshot("WonderNest-memory-cards.png")
     tap("Helpful hint")
     print("PASS: Memory Card game launches and accepts help")
     launch()
     must_see("Explorer!")
     tap("Choose an adventure")
+    screenshot("WonderNest-games-collection.png")
     games=[
       "Memory Card Match",
       "Remember the Objects",
@@ -138,6 +148,7 @@ def main():
     edit("Enter parent PIN","638421")
     tap("Unlock parent area")
     must_see("Parent control center")
+    screenshot("WonderNest-parent-dashboard.png")
     tap("Screen time")
     must_see("Daily")
     tap("Learning progress")
