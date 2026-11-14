@@ -1,0 +1,58 @@
+name: WonderNest Android Onboarding And 12 Game UI Smoke
+on:
+  workflow_run:
+    workflows:
+      - Build WonderNest Standalone APK from Verified Source
+    types:
+      - completed
+permissions:
+  actions: read
+  contents: read
+jobs:
+  native-ui-smoke:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_sha == '3948ba84edff694a14c357ff4435d1c1e8f84f04' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download standalone APK for on-device UI checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          mkdir -p downloaded
+          gh run download "$RUN_ID" --repo "$GH_REPO" --name WonderNest-v0.3.0-Installable-APK --dir downloaded
+          test -s downloaded/app-release.apk
+      - name: Enable accelerated emulator
+        run: |
+          test -e /dev/kvm
+          sudo chmod a+rw /dev/kvm
+      - name: Test real Android onboarding and all game routes offline
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -noaudio -no-boot-anim -gpu swiftshader_indirect
+          script: |
+            adb install -r downloaded/app-release.apk
+            adb shell svc wifi disable
+            adb shell svc data disable || true
+            adb logcat -c
+            python3 tools/android_ui_smoke.py
+      - name: Attach real interaction screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WonderNest-v0.3.0-Real-Android-UI-Evidence
+          path: |
+            WonderNest-guided-tutorial.png
+            WonderNest-memory-cards.png
+            WonderNest-games-collection.png
+            WonderNest-parent-dashboard.png
+          if-no-files-found: warn
+          retention-days: 30
