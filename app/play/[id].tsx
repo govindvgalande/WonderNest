@@ -29,6 +29,18 @@ function Grid({challenge,preview,chosen,onSelect,locale}:{challenge:Challenge;pr
   </Pressable>;
  })}</View></View>;
 }
+/** Non-animated spatial memory board: shapes occupy fixed locations, unlike
+ * Pattern Memory's timed sequence. Blank slots remain visible to show progress. */
+function ShapeGrid({items,cols,locale}:{items:string[];cols:number;locale:'en'|'hi'|'mr'}){
+ const slots=Array.from({length:cols*cols},(_,i)=>items[i]);
+ return <View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'center',marginVertical:12,gap:7}}>
+   {slots.map((item,i)=><View key={i} accessible accessibilityLabel={item?tokenName(locale,item):`${t(locale,'squareLabel')} ${i+1}`}
+     style={{width:cols===2?'43%':'29%',height:78,backgroundColor:item?C.white:C.mint,borderColor:item?C.green:C.border,
+       borderWidth:2,borderRadius:18,alignItems:'center',justifyContent:'center'}}>
+     <Text style={{fontSize:34}}>{item?TOKEN_ICONS[item]||'⭐':'·'}</Text>
+   </View>)}
+ </View>;
+}
 export default function Game(){
  const params=useLocalSearchParams<{id:string}>();const gameId=GAME_IDS.find(x=>x===params.id);const a=useApp();const p=a.profile;const loc=a.settings.locale;
  const [challenge,setChallenge]=useState<Challenge|null>(null);
@@ -144,20 +156,20 @@ export default function Game(){
  if(!p||!gameId)return <Page title="WonderNest"><Action label={t(loc,'home')} onPress={()=>router.replace('/')}/></Page>;
  if(!challenge)return <Page title={title}><P>🌈</P></Page>;
  const instruction=t(loc,`prompt_${challenge.prompt}` as Parameters<typeof t>[1]);
- const selectionMode=challenge.mode==='multi'||challenge.mode==='single'||challenge.mode==='sequence';
+ const selectionMode=challenge.mode==='multi'||challenge.mode==='single'||challenge.mode==='sequence'||challenge.mode==='reconstruct';
  return <Page title={`${GAME_INFO[gameId].icon} ${title}`} subtitle={`${t(loc,'ageGroup')}: ${p.ageGroup}  •  ${t(loc,'levelLabel')} ${challenge.level}`}>
   <View style={{flexDirection:'row',gap:10}}><View style={{flex:1}}><Action kind="soft" label={t(loc,'back')} onPress={goBack} small/></View><View style={{flex:1}}><Action kind="soft" label={paused?t(loc,'resume'):t(loc,'pause')} onPress={()=>setPaused(!paused)} small/></View></View>
   {a.breakDue&&!a.blocked?<Card style={{backgroundColor:C.yellow}}><P>💧 {t(loc,'breakNow')}</P></Card>:null}
   {paused?<Card><Head>{t(loc,'pause')}</Head><Action label={t(loc,'resume')} onPress={()=>setPaused(false)}/><Action kind="soft" label={t(loc,'finish')} onPress={()=>router.replace('/finish')}/></Card>:
   phase==='completed'?<Card style={{backgroundColor:C.mint}}><Text style={{textAlign:'center',fontSize:65}}>{success?'🌟':'🌱'}</Text><Head>{success?t(loc,'great'):t(loc,'tryAgainMessage')}</Head><P>{t(loc,'youTried')}</P><P>🧠 {t(loc,'attempts')}: {mistakes+1} • {t(loc,'hint')}: {hints}</P><Action label={t(loc,'done')} onPress={()=>router.replace('/finish')}/><Action kind="soft" label={t(loc,'again')} onPress={reset}/></Card>:
   <>
-   <Card><Head>{instruction}</Head><P>{phase==='preview'?t(loc,'ready'):challenge.mode==='multi'?t(loc,'selectAll'):challenge.mode==='single'?t(loc,'selectOne'):(challenge.mode==='route'||challenge.mode==='maze')?t(loc,'tapRoute'):t(loc,'tapOrder')}</P>
+   <Card><Head>{instruction}</Head><P>{phase==='preview'?t(loc,'ready'):challenge.mode==='multi'?t(loc,'selectAll'):challenge.mode==='single'?t(loc,'selectOne'):(challenge.mode==='route'||challenge.mode==='maze')?t(loc,'tapRoute'):challenge.mode==='reconstruct'?t(loc,'tapGrid'):t(loc,'tapOrder')}</P>
     {a.settings.narration?<Action kind="soft" small label={t(loc,'readInstruction')} onPress={()=>void say(instruction)}/>:null}
     {narrationError?<P style={{color:C.muted}}>{t(loc,'noVoice')}</P>:null}
     {challenge.gameId==='sounds'?<Action kind="secondary" label={t(loc,'listenAgain')} disabled={soundBusy} onPress={()=>void playSequence()}/>:null}
    </Card>
    {phase==='preview'?<Card style={{backgroundColor:C.blue}}>
-      {challenge.gridSize?<Grid challenge={challenge} chosen={[]} preview locale={loc} onSelect={()=>{}}/>:
+      {challenge.mode==='reconstruct'?<ShapeGrid items={challenge.preview} cols={challenge.gridSize||2} locale={loc}/>:challenge.gridSize?<Grid challenge={challenge} chosen={[]} preview locale={loc} onSelect={()=>{}}/>:
        challenge.prompt==='observe'?<View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'center'}}>{challenge.preview.map((line,i)=>{
         const [actor,place]=line.split('@');return <View key={i} style={{width:'46%',backgroundColor:C.white,borderRadius:17,margin:5,padding:12,alignItems:'center'}}><Text style={{fontSize:42}}>{TOKEN_ICONS[actor!]}</Text><Text style={{fontSize:32}}>{TOKEN_ICONS[place!]}</Text><P style={{textAlign:'center'}}>{t(loc,'scenePlace',{actor:tokenName(loc,actor!),place:tokenName(loc,place!)})}</P></View>;
        })}</View>:
@@ -175,10 +187,10 @@ export default function Game(){
       return <View key={i} style={{width:'24%',padding:3}}><FlipCard id={id} locale={loc} faceUp={faceUp} matched={matched.includes(i)} reducedMotion={a.settings.reducedMotion} onPress={()=>onCard(i)}/></View>;
      })}</View><P>{matched.length/2} / {(challenge.board?.length||0)/2}</P></Card>:null}
      {selectionMode?<Card>
-      {chosen.length>0?<P>✓ {chosen.map(x=>TOKEN_ICONS[x]||tokenName(loc,x)).join('  →  ')}</P>:null}
+      {challenge.mode==='reconstruct'?<ShapeGrid items={chosen} cols={challenge.gridSize||2} locale={loc}/>:chosen.length>0?<P>✓ {chosen.map(x=>TOKEN_ICONS[x]||tokenName(loc,x)).join('  →  ')}</P>:null}
       <View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'center'}}>{challenge.options.map(id=><Item key={id} id={id} locale={loc} selected={chosen.includes(id)} disabled={challenge.mode==='sequence'&&gameId==='order'&&chosen.includes(id)} onPress={()=>onChoice(id)}/>)}</View>
       {challenge.mode==='multi'?<Action label={t(loc,'submit')} disabled={!chosen.length} onPress={()=>{if(evaluateChallenge(challenge,chosen))complete(true);else{setMistakes(m=>m+1);setFeedback(t(loc,'wrong'));void playTone('wood',a.settings);}}}/>:null}
-      {challenge.mode==='sequence'?<Action kind="soft" label={t(loc,'clear')} onPress={()=>setChosen([])}/>:null}
+      {(challenge.mode==='sequence'||challenge.mode==='reconstruct')&&chosen.length>0?<Action kind="soft" label={t(loc,'clear')} onPress={()=>setChosen([])}/>:null}
      </Card>:null}
      {(challenge.mode==='route'||challenge.mode==='maze')&&chosen.length>0?<Action kind="soft" label={t(loc,'clear')} onPress={()=>{setChosen([]);setFeedback('');setHintText('');}}/>:null}
      {feedback?<P style={{color:C.red,textAlign:'center'}}>{feedback}</P>:null}
