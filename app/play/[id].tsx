@@ -47,7 +47,7 @@ export default function Game(){
  const [phase,setPhase]=useState<'preview'|'answer'|'completed'>('preview');
  const [chosen,setChosen]=useState<string[]>([]),[flipped,setFlipped]=useState<number[]>([]),[matched,setMatched]=useState<number[]>([]);
  const [hintText,setHintText]=useState(''),[mistakes,setMistakes]=useState(0),[hints,setHints]=useState(0),[feedback,setFeedback]=useState('');
- const [success,setSuccess]=useState(false),[paused,setPaused]=useState(false),[lit,setLit]=useState(-1),[narrationError,setNarrationError]=useState(false),[soundBusy,setSoundBusy]=useState(false);
+ const [success,setSuccess]=useState(false),[paused,setPaused]=useState(false),[lit,setLit]=useState(-1),[narrationError,setNarrationError]=useState(false),[soundBusy,setSoundBusy]=useState(false),[showSoundVisual,setShowSoundVisual]=useState(false);
  const lock=useRef(false),finished=useRef(false),seqToken=useRef(0),started=useRef(Date.now());
  const timeouts=useRef<ReturnType<typeof setTimeout>[]>([]);
  const schedule=(fn:()=>void,ms:number)=>{const tid=setTimeout(()=>{timeouts.current=timeouts.current.filter(t=>t!==tid);fn();},ms);timeouts.current.push(tid);};
@@ -61,7 +61,7 @@ export default function Game(){
   setChallenge(c);setPhase(saved?.phase||(c.mode==='cards'?'answer':'preview'));
   setChosen(saved?.chosen||[]);setMatched(saved?.matched||[]);
   setMistakes(saved?.mistakes||0);setHints(saved?.hints||0);
-  setFlipped([]);setFeedback('');setHintText('');
+  setFlipped([]);setFeedback('');setHintText('');setShowSoundVisual(false);
   started.current=saved?.startedAt||Date.now();
   return ()=>{seqToken.current++;stopSounds();stopVoice();};
  },[p?.id,gameId]);
@@ -88,11 +88,18 @@ export default function Game(){
   }
   if(token===seqToken.current)setSoundBusy(false);
  },[challenge,soundBusy,a.settings]);
+ useEffect(()=>{
+  if(challenge?.gameId==='sounds'&&phase==='preview'&&!paused&&a.settings.sound&&a.settings.volume>0){
+    void playSequence();
+  }
+ // Run once for a new preview. The player itself handles cancellation on leave.
+ },[challenge?.id,phase]);
+ useEffect(()=>{if(paused){seqToken.current++;stopSounds();setSoundBusy(false);}},[paused]);
  const reset=()=>{
   if(!p||!gameId)return;
   seqToken.current++;stopSounds();for(const t of timeouts.current)clearTimeout(t);timeouts.current=[];finished.current=false;lock.current=false;
   const diff=getDifficulty(p.id,gameId,p.ageGroup);const c=generateChallenge(gameId,p.ageGroup,diff.level,newSeed());
-  setChallenge(c);setPhase(c.mode==='cards'?'answer':'preview');setChosen([]);setFlipped([]);setMatched([]);setMistakes(0);setHints(0);setHintText('');setFeedback('');setSuccess(false);setPaused(false);setSoundBusy(false);started.current=Date.now();
+  setChallenge(c);setPhase(c.mode==='cards'?'answer':'preview');setChosen([]);setFlipped([]);setMatched([]);setMistakes(0);setHints(0);setHintText('');setFeedback('');setSuccess(false);setPaused(false);setSoundBusy(false);setShowSoundVisual(false);started.current=Date.now();
  };
  const complete=(correct:boolean,overrideMistakes=mistakes)=>{
   if(!challenge||!p||finished.current)return;
@@ -166,10 +173,13 @@ export default function Game(){
    <Card><Head>{instruction}</Head><P>{phase==='preview'?t(loc,'ready'):challenge.mode==='multi'?t(loc,'selectAll'):challenge.mode==='single'?t(loc,'selectOne'):(challenge.mode==='route'||challenge.mode==='maze')?t(loc,'tapRoute'):challenge.mode==='reconstruct'?t(loc,'tapGrid'):t(loc,'tapOrder')}</P>
     {a.settings.narration?<Action kind="soft" small label={t(loc,'readInstruction')} onPress={()=>void say(instruction)}/>:null}
     {narrationError?<P style={{color:C.muted}}>{t(loc,'noVoice')}</P>:null}
-    {challenge.gameId==='sounds'?<Action kind="secondary" label={t(loc,'listenAgain')} disabled={soundBusy} onPress={()=>void playSequence()}/>:null}
+    {challenge.gameId==='sounds'?<Action kind="secondary" label={t(loc,'listenAgain')} disabled={soundBusy||!a.settings.sound||a.settings.volume===0} onPress={()=>void playSequence()}/>:null}
    </Card>
    {phase==='preview'?<Card style={{backgroundColor:C.blue}}>
-      {challenge.mode==='reconstruct'?<ShapeGrid items={challenge.preview} cols={challenge.gridSize||2} locale={loc}/>:challenge.gridSize?<Grid challenge={challenge} chosen={[]} preview locale={loc} onSelect={()=>{}}/>:
+      {challenge.gameId==='sounds'&&a.settings.sound&&a.settings.volume>0&&!showSoundVisual?
+        <View style={{alignItems:'center',paddingVertical:18}}><Text style={{fontSize:70}}>🎶</Text><P style={{textAlign:'center'}}>{t(loc,'soundPreviewHelp')}</P>
+         <Action kind="soft" label={t(loc,'soundVisual')} onPress={()=>setShowSoundVisual(true)}/></View>:
+       challenge.mode==='reconstruct'?<ShapeGrid items={challenge.preview} cols={challenge.gridSize||2} locale={loc}/>:challenge.gridSize?<Grid challenge={challenge} chosen={[]} preview locale={loc} onSelect={()=>{}}/>:
        challenge.prompt==='observe'?<View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'center'}}>{challenge.preview.map((line,i)=>{
         const [actor,place]=line.split('@');return <View key={i} style={{width:'46%',backgroundColor:C.white,borderRadius:17,margin:5,padding:12,alignItems:'center'}}><Text style={{fontSize:42}}>{TOKEN_ICONS[actor!]}</Text><Text style={{fontSize:32}}>{TOKEN_ICONS[place!]}</Text><P style={{textAlign:'center'}}>{t(loc,'scenePlace',{actor:tokenName(loc,actor!),place:tokenName(loc,place!)})}</P></View>;
        })}</View>:
