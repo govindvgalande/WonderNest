@@ -1,38 +1,35 @@
-# Evidence-based feature matrix
+# WonderNest Feature Verification Matrix — 2026-11-14
 
-Statuses: PASS = tested at the explicitly stated layer; NOT TESTED = source exists but appropriate verification not executed; BLOCKED = requires unavailable environment or account; NOT IMPLEMENTED = specifically missing; FAIL = executed test failed.
+The status below is based on the actual repo, current source and GitHub CI, not on README claims.
 
-| Requirement | Status | Actual evidence / qualification |
-|---|---|---|
-| 12 puzzle generators (all ages) | PASS | 9,000 deterministic generated puzzles with valid/solvable assertions in `tests/core.test.ts` |
-| Matching logic and pair validation | PASS | `isMatchingCardPair`, `evaluateCardSolution` and tests |
-| Object, pattern, missing, route, sound, observation, story, shape, order, maze, explorer answer validation | PASS | `generate.ts` evaluator + generated-answer tests |
-| All 12 interactive Android game screens | NOT TESTED | JSX UI route code implemented; no native runtime |
-| Age-bounded difficulty engine | PASS | deterministic adaptive rule and bounds tests |
-| Age-dependent UI layout and accessibility | NOT TESTED | JSX includes large controls/TalkBack labels; no device validation |
-| Seeded challenge reproduction | PASS | generator property tests |
-| SQLite database DDL and v1→v2 migration | PASS | real Python SQLite schema tests; not Android implementation |
-| Device persistent profile/progress/rewards | NOT TESTED | data access layer and SQL implemented; no Android app restart test |
-| Local PIN logic, lockout, recovery | PASS | MOCKED SecureStore/OS auth contract unit test; **not device verification** |
-| Native SecureStore PIN protection | NOT TESTED | requires Android device credential testing |
-| Parent dashboards, input controls and deletions | NOT TESTED | source implemented, device/UI flows not executed |
-| Day/session/family screen-time business rules | PASS | deterministic policy tests; actual app lifecycle unverified |
-| Break reminder | NOT TESTED | configurable 5–60 minute in-app interval implemented; visual UI not verified on device |
-| Background / force-stop time preservation | NOT TESTED | foreground heartbeat and persistent DB code written; not tested on Android |
-| Pause/resume and allowed hours | PASS | time-interval policy tests; UI not verified |
-| Rewards duplicate prevention | PASS | rewards function and unique SQLite key tests |
-| English, Hindi, Marathi text completeness | PASS | matching localization keys and object translation coverage tests; linguistic QA outstanding |
-| Narration in all three languages offline | NOT IMPLEMENTED | optional OS TTS, depends on preinstalled voice; no guaranteed bundled narrations |
-| Sound memory WAV notes & original music assets | PASS | eight generated audio files present and validated as WAV; playback not device-tested |
-| Sound effects & music playback | NOT TESTED | code exists, Android audio engine not run |
-| Premium production-ready all-original artwork | NOT IMPLEMENTED | original worlds/mascot exist, but puzzle items currently emoji glyphs |
-| App UI, animations and screen navigation | NOT TESTED | implementation exists, no native build or UI automation |
-| Functional offline puzzles | PASS | no-network pure logic tests; full Android offline mode unverified |
-| Google Play Families/privacy compliance | BLOCKED | code is minimized, but release package and legal review not completed |
-| Android 16 API 36 configuration | PASS | `app.json` contains targetSdkVersion 36, `allowBackup=false`, microphone blocked; actual merged manifest unverified |
-| APK | BLOCKED | no npm registry/Android build credentials/tools |
-| Signed AAB | BLOCKED | EAS, signing and credentials required |
-| Play listing descriptions and original feature graphic | PASS | draft English/Hindi/Marathi listings, original 1024×500 graphic; not approved/published |
-| Genuine Play Store screenshots | NOT IMPLEMENTED | cannot capture without running native app |
-| Publicly hosted privacy policy/contact | BLOCKED | no hosting URL/contact supplied |
-| Closed testing and publishing | BLOCKED | requires developer Play Console and testers |
+**Definitions:** PASS — tested at the layer stated; NOT TESTED — implementation exists but native/physical verification is pending; BLOCKED — external accounts, signing, devices, or professional review are necessary; NOT IMPLEMENTED — missing capability; FAIL — observed test failure.
+
+| Requirement | Status | Specific evidence or gap |
+| --- | --- | --- |
+| All 12 deterministic game generators and validators, three age groups | PASS | `npm run test:core` runs 9,000 seeded challenges, answer validation, and adaptive bounds; latest current source quality run `43567471493` PASS. |
+| Age-specific challenge counts and maze solvability | PASS | Bounded seeded DFS guarantees complete route lengths; seed/property tests run. |
+| Distinct maze interaction with decoy corridors | PASS (logic) / NOT TESTED (device) | Seeded branches plus clear-path control implemented, native flow requires device testing. |
+| Game hints, wrong answers, win/replay UX | NOT TESTED | UI implemented; no complete automated native interaction suite. |
+| In-progress challenge recovery on app restart | NOT TESTED | SQLite `active_runs` migration v3, save/restore/clear code and database-contract tests; device kill/relaunch still required. |
+| Adaptive difficulty persists by profile/game | PASS (logic) / NOT TESTED (device) | Algorithm tests and SQLite schema contract pass; device lifecycle not verified. |
+| Parent PIN, lockout and OS-assisted recovery | NOT TESTED | SecureStore and native auth implemented; native bypass/lockout/recovery not independently tested. |
+| Create/edit/delete profiles and avatar/age controls | NOT TESTED | UI and SQLite data layer implemented, native UI flows pending. |
+| Daily, session, shared-family screen-time limits | PASS (logic) / NOT TESTED (device) | Pure policy tests and v4 cross-profile household-session storage; device lifecycle testing remains. |
+| Full local data deletion including parent PIN | NOT TESTED | Authenticated delete now clears SQLite + SecureStore PIN and returns onboarding; needs native verification. |
+| Rewards, badges and weekly summaries | PASS (logic) / NOT TESTED (device) | Pure badge tests, SQLite uniqueness, and weekly bars implemented; user-flow tests pending. |
+| Offline gameplay, no backend requirement | PASS (pure logic) / NOT TESTED (full app) | Pure generation/evaluation are offline; bundled Android startup tested with user on previous APK, but all games airplane mode not exercised. |
+| English, Hindi, Marathi UI text | PASS (matching keys) / NOT TESTED (linguistics) | Localization contract tests pass; fluent copy and TalkBack review pending. |
+| Offline spoken instructions in every language | NOT IMPLEMENTED | System speech may require installed voices; speech files are not bundled for all instructions. |
+| Child-friendly music and tone playback | PASS (assets) / NOT TESTED (device) | Bundled playable WAVs, code path exists; Android sound devices not audited. |
+| Original polished puzzle illustration library | NOT IMPLEMENTED | Original world/mascot art exists; gameplay still uses emoji-dependent token rendering. |
+| Reduced motion, high contrast, accessible controls | NOT TESTED | Controls and reduced-motion switches exist, requires native TalkBack and large-text checks. |
+| Android standalone test APK | PASS (previous version) / NOT TESTED (current update) | Working release-mode APK reported installed by user; current v0.2 compile run `43567509391` and emulator smoke must be reviewed. |
+| Production signed and stable-upgrade Android App Bundle | BLOCKED | Proper durable signing keystore and Play Console credentials/configuration not provided. Debug/test signing may force uninstall on update. |
+| Child privacy compliance, policy and legal clearance | BLOCKED | Offline/no ads by design, but merged manifest, dependency audit and applicable policy/legal checks remain. |
+| Genuine Google Play screenshots & publishing | BLOCKED | Needs representative device screenshots, listing/privacy URL, Play Console and required tests/review. |
+
+## Release verdict
+
+**Test APK: available from the existing v0.1 preview; current v0.2 APK is building. Google Play production release: not yet verified.**
+
+Do not calculate a completion percentage by counting code files; the acceptance criteria include native functionality and external publication prerequisites.
