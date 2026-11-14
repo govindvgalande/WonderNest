@@ -53,6 +53,24 @@ for(const age of ['3-5','6-8','9-12'] as const){
     assert.equal(d.level,min);
   });
 }
+test('Shape & Color Memory uses position-based reconstruction, not another sequence challenge',()=>{
+  for(const age of ['3-5','6-8','9-12'] as const){
+    const b=AGE_BOUNDS[age];
+    for(let seed=0;seed<250;seed++){
+      const level=b.min+(seed%(b.max-b.min+1));
+      const shape=generateChallenge('shapes',age,level,seed);
+      const pattern=generateChallenge('pattern',age,level,seed);
+      assert.equal(shape.mode,'reconstruct');
+      assert.equal(pattern.mode,'sequence');
+      assert.ok(shape.gridSize===2||shape.gridSize===3);
+      assert.ok(shape.answer.length<=shape.gridSize!*shape.gridSize!);
+      assert.deepEqual(shape.preview,shape.answer);
+      assert.ok(validateChallenge(shape));
+      assert.ok(evaluateChallenge(shape,shape.answer));
+      assert.equal(evaluateChallenge(shape,shape.answer.slice().reverse().slice(1)),false);
+    }
+  }
+});
 test('Brain Explorer never loses the instructions for a generated challenge',()=>{
  for(const age of ['3-5','6-8','9-12'] as const){
    for(let seed=0;seed<750;seed++){
