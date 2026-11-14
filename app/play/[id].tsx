@@ -19,12 +19,12 @@ function Item({id,locale,selected=false,onPress,disabled=false,dim=false,highlig
   <Text style={{fontSize:32}}>{TOKEN_ICONS[id]||'⭐'}</Text><Text style={{fontSize:12,fontWeight:'700',color:C.ink,textAlign:'center',paddingHorizontal:3}}>{tokenName(locale,id)}</Text>
  </Pressable></View>;
 }
-function Grid({challenge,preview,chosen,onSelect}:{challenge:Challenge;preview:boolean;chosen:string[];onSelect:(id:string)=>void}){
+function Grid({challenge,preview,chosen,onSelect,locale}:{challenge:Challenge;preview:boolean;chosen:string[];onSelect:(id:string)=>void;locale:'en'|'hi'|'mr'}){
  const size=challenge.gridSize||3;const {width}=useWindowDimensions();const side=Math.max(42,Math.min(80,(Math.min(width,620)-72)/size-6));
  return <View style={{alignItems:'center',marginVertical:15}}><View style={{width:(side+5)*size,flexDirection:'row',flexWrap:'wrap',justifyContent:'center'}}>{challenge.options.map((cell,index)=>{
   const step=(preview?challenge.preview:chosen).indexOf(cell);const wall=challenge.mode==='maze'&&!challenge.board?.includes(cell);
   const isStart=index===0;const end=challenge.answer[challenge.answer.length-1]===cell;
-  return <Pressable key={cell} onPress={()=>onSelect(cell)} disabled={preview||wall} accessibilityLabel={`${isStart?'Start':end?'Goal':'Square'} ${index+1}${wall?' wall':''}`} accessibilityRole="button" style={{margin:2,width:side,height:side,alignItems:'center',justifyContent:'center',borderRadius:13,borderWidth:2,borderColor:step>=0?C.green:C.border,backgroundColor:wall?'#CCD5DB':step>=0?C.mint:C.white}}>
+  return <Pressable key={cell} onPress={()=>onSelect(cell)} disabled={preview||wall} accessibilityLabel={`${isStart?t(locale,'startLabel'):end?t(locale,'goalLabel'):t(locale,'squareLabel')} ${index+1}${wall?' '+t(locale,'wallLabel'):''}`} accessibilityRole="button" style={{margin:2,width:side,height:side,alignItems:'center',justifyContent:'center',borderRadius:13,borderWidth:2,borderColor:step>=0?C.green:C.border,backgroundColor:wall?'#CCD5DB':step>=0?C.mint:C.white}}>
    <Text style={{fontWeight:'900',fontSize:step>=0?19:15,color:C.ink}}>{step>=0?`${step+1}`:isStart?'🚩':end?'🎁':'·'}</Text>
   </Pressable>;
  })}</View></View>;
@@ -157,7 +157,7 @@ export default function Game(){
     {challenge.gameId==='sounds'?<Action kind="secondary" label={t(loc,'listenAgain')} disabled={soundBusy} onPress={()=>void playSequence()}/>:null}
    </Card>
    {phase==='preview'?<Card style={{backgroundColor:C.blue}}>
-      {challenge.gridSize?<Grid challenge={challenge} chosen={[]} preview onSelect={()=>{}}/>:
+      {challenge.gridSize?<Grid challenge={challenge} chosen={[]} preview locale={loc} onSelect={()=>{}}/>:
        challenge.prompt==='observe'?<View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'center'}}>{challenge.preview.map((line,i)=>{
         const [actor,place]=line.split('@');return <View key={i} style={{width:'46%',backgroundColor:C.white,borderRadius:17,margin:5,padding:12,alignItems:'center'}}><Text style={{fontSize:42}}>{TOKEN_ICONS[actor!]}</Text><Text style={{fontSize:32}}>{TOKEN_ICONS[place!]}</Text><P style={{textAlign:'center'}}>{t(loc,'scenePlace',{actor:tokenName(loc,actor!),place:tokenName(loc,place!)})}</P></View>;
        })}</View>:
@@ -169,7 +169,7 @@ export default function Game(){
      {challenge.prompt==='missing'&&challenge.board?<Card style={{backgroundColor:C.blue}}><View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'center'}}>{challenge.board.map(id=><Item key={id} id={id} locale={loc} disabled onPress={()=>{}}/>)}</View></Card>:null}
      {challenge.prompt==='observe'?<Card><Head>{t(loc,'questionObserve',{item:tokenName(loc,challenge.cue||'')})}</Head></Card>:null}
      {challenge.prompt==='story'?<Card><Head>{t(loc,'questionStory',{item:tokenName(loc,challenge.cue||'')})}</Head></Card>:null}
-     {(challenge.mode==='route'||challenge.mode==='maze')?<Card><Grid challenge={challenge} preview={false} chosen={chosen} onSelect={onChoice}/><P>{chosen.length} / {challenge.answer.length}</P></Card>:null}
+     {(challenge.mode==='route'||challenge.mode==='maze')?<Card><Grid challenge={challenge} preview={false} chosen={chosen} locale={loc} onSelect={onChoice}/><P>{chosen.length} / {challenge.answer.length}</P></Card>:null}
      {challenge.mode==='cards'?<Card><View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'center'}}>{(challenge.board||[]).map((id,i)=>{
       const faceUp=flipped.includes(i)||matched.includes(i);
       return <View key={i} style={{width:'24%',padding:3}}><FlipCard id={id} locale={loc} faceUp={faceUp} matched={matched.includes(i)} reducedMotion={a.settings.reducedMotion} onPress={()=>onCard(i)}/></View>;
