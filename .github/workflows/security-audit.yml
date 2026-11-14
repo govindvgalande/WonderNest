@@ -21,6 +21,8 @@ jobs:
         with:
           node-version: '22.13.1'
       - name: Install exact pinned package versions
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: |
+          node --version && npm --version
+          npm ci --ignore-scripts --no-audit --no-fund
       - name: Check production dependency vulnerabilities
         run: npm audit --omit=dev --audit-level=high
