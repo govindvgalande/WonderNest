@@ -1,0 +1,44 @@
+name: Publish WonderNest v0.2.0 Test APK
+on:
+  workflow_run:
+    workflows:
+      - Build WonderNest Standalone APK from Verified Source
+    types:
+      - completed
+permissions:
+  actions: read
+  contents: write
+jobs:
+  publish-preview:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_sha == '3e7295cfa09651a0765af312619a9ae267f3356d' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download tested Android APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download "$RUN_ID" --repo "$GH_REPO" --name WonderNest-v0.2.0-Installable-APK --dir package
+          test -s package/app-release.apk
+          unzip -Z -1 package/app-release.apk | grep -F 'assets/index.android.bundle'
+          cp package/app-release.apk WonderNest-v0.2.0.apk
+          zip -9 -j WonderNest-v0.2.0-Compressed.zip WonderNest-v0.2.0.apk >/dev/null
+          sha256sum WonderNest-v0.2.0.apk WonderNest-v0.2.0-Compressed.zip
+          ls -lh WonderNest-v0.2.0.*
+      - name: Publish clearly labeled Android preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create v0.2.0-preview \
+            WonderNest-v0.2.0.apk WonderNest-v0.2.0-Compressed.zip \
+            --repo "$GH_REPO" --target 3e7295cfa09651a0765af312619a9ae267f3356d \
+            --title "WonderNest v0.2.0 – Android Test APK" \
+            --notes "Pre-release test APK with unfinished-game recovery, family screen-time hardening, stronger memory mazes, accessibility/localization updates, and parental data deletion improvements. Not yet independently verified for every interaction, device, privacy rule, or Play Store publication. Android APK signing uses a temporary build key: uninstalling an earlier preview may be required and can delete local child progress." \
+            --prerelease
