@@ -1,0 +1,32 @@
+name: Freeze WonderNest Dependency Versions
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/create-lockfile.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.1'
+      - name: Generate reproducible npm lockfile
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          test -s package-lock.json
+          node -e "const p=require('./package-lock.json');if(p.name!=='wondernest-kids-memory-adventure')process.exit(1)"
+      - name: Save dependency lockfile to default branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Commit reproducible pinned npm dependency lockfile'
+            git push origin main
+          fi
