@@ -1,0 +1,42 @@
+name: Publish v0.3 Direct APK And Smaller ZIP
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-v0.3.0-direct.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download successfully compiled APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p apk
+          gh run download 43574246270 --repo "$GH_REPO" --name WonderNest-v0.3.0-Installable-APK --dir apk
+          test -s apk/app-release.apk
+          unzip -Z -1 apk/app-release.apk | grep -F 'assets/index.android.bundle'
+          cp apk/app-release.apk WonderNest-v0.3.0.apk
+          zip -9 -j WonderNest-v0.3.0-Compressed.zip WonderNest-v0.3.0.apk >/dev/null
+          sha256sum WonderNest-v0.3.0.apk WonderNest-v0.3.0-Compressed.zip
+      - name: Release direct and smaller Android downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release create v0.3.0-preview \
+            WonderNest-v0.3.0.apk WonderNest-v0.3.0-Compressed.zip \
+            --repo "$GH_REPO" --target "3948ba84edff694a14c357ff4435d1c1e8f84f04" \
+            --title "WonderNest v0.3.0 - Android Preview Test Build" \
+            --notes "Standalone Android preview including first-play tutorial, spatial shape memory, audio-first sound game, deterministic complete mazes, shared family time budgets, and improved child-parent controls. Tested in CI; not certified for Google Play, child policy, or full UI/device coverage. Existing locally saved data can be lost if the installer needs the old build uninstalled." \
+            --prerelease
