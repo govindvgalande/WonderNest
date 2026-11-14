@@ -93,12 +93,13 @@ jobs:
           test -s "$APK" || { echo "::error::Signed release APK was not produced"; exit 1; }
           unzip -l "$APK" | grep -q 'assets/index.android.bundle' || { echo "::error::Standalone JavaScript bundle is missing"; exit 1; }
           echo "Verified: standalone APK includes the React Native JavaScript bundle."
+          sha256sum "$APK"
           ls -lh "$APK"
 
       - name: Upload WonderNest APK
         uses: actions/upload-artifact@v4
         with:
-          name: WonderNest-Updated-Standalone-APK
+          name: WonderNest-v0.2.0-Installable-APK
           path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
