@@ -6,7 +6,7 @@ import type {Challenge,GameId} from '../../src/core/types';
 import {GAME_IDS} from '../../src/core/types';
 import {GAME_INFO,TOKEN_ICONS} from '../../src/core/catalog';
 import {allowedNextCell,evaluateChallenge,isMatchingCardPair,generateChallenge} from '../../src/core/generate';
-import {getDifficulty} from '../../src/storage/database';
+import {getDifficulty,getActiveRun,saveActiveRun,clearActiveRun} from '../../src/storage/database';
 import {useApp} from '../../src/ui/provider';
 import {Action,Card,Head,Page,P,Tag,Tile} from '../../src/ui/atoms';
 import {C} from '../../src/ui/theme';
@@ -43,11 +43,22 @@ export default function Game(){
  const title=gameId?t(loc,`game_${gameId}` as Parameters<typeof t>[1]):'';
  useEffect(()=>{
   if(!p||!gameId)return;
+  const saved=getActiveRun(p.id,gameId,p.ageGroup);
   const diff=getDifficulty(p.id,gameId,p.ageGroup);
-  const c=generateChallenge(gameId,p.ageGroup,diff.level,newSeed());setChallenge(c);setPhase(c.mode==='cards'?'answer':'preview');started.current=Date.now();
+  const c=saved?.challenge||generateChallenge(gameId,p.ageGroup,diff.level,newSeed());
+  setChallenge(c);setPhase(saved?.phase||(c.mode==='cards'?'answer':'preview'));
+  setChosen(saved?.chosen||[]);setMatched(saved?.matched||[]);
+  setMistakes(saved?.mistakes||0);setHints(saved?.hints||0);
+  setFlipped([]);setFeedback('');setHintText('');
+  started.current=saved?.startedAt||Date.now();
   return ()=>{seqToken.current++;stopSounds();stopVoice();};
  },[p?.id,gameId]);
  useEffect(()=>{if((a.blocked||!!(gameId&&p?.disabledGames.includes(gameId)))&&phase!=='completed')router.replace('/');},[a.blocked,phase]);
+ // Save completed navigation/selection state to local SQLite after each interaction.
+ useEffect(()=>{
+  if(!p||!gameId||!challenge||challenge.gameId!==gameId||challenge.ageGroup!==p.ageGroup||phase==='completed'||finished.current)return;
+  saveActiveRun(p.id,gameId,{challenge,phase,chosen,matched,mistakes,hints,startedAt:started.current});
+ },[p?.id,p?.ageGroup,gameId,challenge,phase,chosen,matched,mistakes,hints]);
  // Visual sequence highlighting, no stressful countdown. Children decide when ready.
  useEffect(()=>{
   if(!challenge||phase!=='preview'||paused||a.settings.reducedMotion||!(challenge.mode==='sequence'))return;
@@ -74,6 +85,7 @@ export default function Game(){
  const complete=(correct:boolean,overrideMistakes=mistakes)=>{
   if(!challenge||!p||finished.current)return;
   finished.current=true;seqToken.current++;stopSounds();stopVoice();
+  clearActiveRun(p.id,challenge.gameId);
   a.saveAttempt({profileId:p.id,gameId:challenge.gameId,seed:challenge.seed,level:challenge.level,correct,mistakes:overrideMistakes,hints,durationSec:Math.max(1,Math.floor((Date.now()-started.current)/1000))});
   setSuccess(correct);setPhase('completed');if(correct)void playTone('success',a.settings);
  };
