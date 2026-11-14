@@ -1,0 +1,37 @@
+name: Publish standalone test APK for direct phone download
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-test-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release-standalone-test-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Retrieve verified standalone APK artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh run download 43562585560 --name WonderNest-Standalone-APK --dir downloaded
+          find downloaded -maxdepth 2 -type f -print
+          APK="$(find downloaded -type f -name '*.apk' | head -n 1)"
+          test -n "$APK" && test -s "$APK"
+          cp "$APK" WonderNest-Standalone.apk
+          unzip -Z -1 WonderNest-Standalone.apk | grep -F 'assets/index.android.bundle'
+          sha256sum WonderNest-Standalone.apk
+      - name: Publish a preview release with directly downloadable APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release create v0.1.0-preview             WonderNest-Standalone.apk             --target main             --title "WonderNest Standalone Android APK - Test Build"             --notes "Standalone offline-JavaScript Android APK built from source. This is a **test build**, not a Play Store production release. Install and check gameplay and parental controls on a real device before distribution."             --prerelease
