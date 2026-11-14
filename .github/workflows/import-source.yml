@@ -1,0 +1,33 @@
+name: Import WonderNest Source From ZIP
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/import-source.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Unpack and publish actual editable source
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$(find . -maxdepth 1 -type f -name 'WonderNest*.zip' | sort | head -n 1)"
+          [ -n "$ZIP" ] || { echo "::error::Source ZIP is missing"; exit 1; }
+          mkdir -p /tmp/wondernest-import
+          unzip -q "$ZIP" -d /tmp/wondernest-import
+          [ -f /tmp/wondernest-import/WonderNest/package.json ] || { echo "::error::Missing app package.json"; exit 1; }
+          rsync -a --exclude .github --exclude node_modules --exclude android --exclude .expo --exclude '*.apk' /tmp/wondernest-import/WonderNest/ ./
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish editable WonderNest application source"
+            git push origin main
+          fi
