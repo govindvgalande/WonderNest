@@ -1,60 +1,60 @@
-# Maintained engineering checklist — as of 2026-11-14
+# WonderNest Engineering & Release Checklist — 2026-11-14
 
-## Phase 1 — architecture and environment
-- [x] Offline-first React Native/Expo + SQLite architecture selected
-- [x] Modular TypeScript core, screens, storage, audio and security created
-- [ ] Install npm packages / run Expo SDK Doctor (npm registry was unavailable)
+This checklist tracks demonstrated work, rather than claiming that all code is production-verified.
 
-## Phase 2 — design system
-- [x] Shared design tokens, responsive cards, touch buttons, original backgrounds and mascot artwork
-- [x] Reduced-motion card-flip control and gentle transitions in source
-- [ ] Validate accessibility and layout across actual Android devices
-- [ ] Replace emoji-only item art with fully original illustrated production collection
+## Phase 1 — Architecture and environment
+- [x] Expo SDK 58, React Native 0.88, Expo Router, TypeScript, SQLite, SecureStore.
+- [x] Install dependencies in GitHub Actions and run project-wide strict TypeScript check.
+- [x] Offline Android bundle produced and packed into installable APK.
 
-## Phase 3 — game engine
-- [x] Deterministic seeded puzzle construction
-- [x] Answer validation and hint hooks
-- [x] Property tests for 9,000 puzzles
+## Phase 2 — Design and onboarding
+- [x] Shared child-friendly palette, responsive cards, large actions, branded icon/splash and original themed worlds.
+- [x] First-play guided tutorial routes into working Memory Cards.
+- [x] Reduced-motion support for card flips and navigation.
+- [ ] Fully original high-quality artwork for every puzzle object; current puzzle tiles still use emoji.
+- [ ] TalkBack, large-text, tablet and low-end phone visual QA.
 
-## Phase 4 — 12 games
-- [x] 12 distinct game IDs, procedural challenges and gameplay UI branches in source
-- [x] Automated puzzle correctness tests across 3 ages
-- [ ] Native end-to-end interaction verification for each game (untested)
+## Phase 3 — Gameplay engine
+- [x] Seeded procedural generator, validators, hints, replay, correctness checking, age-bounded challenge levels.
+- [x] 12 game IDs, with original spatial Shape Grid distinct from Pattern Memory.
+- [x] Induced maze paths with valid misleading dead-ends; full path lengths tested.
+- [x] Brain Explorer prompts match the underlying puzzle format.
+- [x] Sound Memory uses audio-first playback with optional visual clues.
+- [ ] Complete on-device interactive testing of all 12 games, including wrong answers, hints, pause and resume.
 
-## Phase 5 — adaptive intelligence
-- [x] Per-game age-bounded deterministic difficulty and tests
-- [ ] Validate adaptive feedback with real users and child-development reviewers
+## Phase 4 — Persistence and parent controls
+- [x] SQLite migrations through v4, profile/progress/rewards/settings and time accounting.
+- [x] Persist incomplete game runs with correctness checks and native-restart recovery logic.
+- [x] Household session budget persists across child profile switches; pure policy tests pass.
+- [x] Authenticated delete-all flow removes local data and SecureStore parent credentials.
+- [x] PIN hashing, lockout, Android device-auth assisted recovery integrated.
+- [ ] Verify all SQLite migrations, backup/delete flows, session enforcement and gate bypass attempts on device.
 
-## Phase 6 — profiles and persistence
-- [x] SQLite profiles/results/rewards/usage/settings and schema migrations in source
-- [x] SQLite DDL/transaction contract tests on Python real engine
-- [ ] Force-stop/reopen/restart device verification
+## Phase 5 — Internationalization, audio and accessibility
+- [x] English, Hindi, Marathi matching text keys and translated tutorials/game labels.
+- [x] Original bundled note sounds, positive cues and optional music.
+- [x] Sound memory visual accessibility alternative and non-color-only shapes.
+- [ ] Fluent native-speaker audit of all content; screen reader traversal and switch access.
+- [ ] Guaranteed offline narration for all three languages (current OS speech depends on installed voices).
 
-## Phase 7 — parent dashboard
-- [x] Parent PIN and simulated rate-limit tests
-- [x] Profile management, allowed hours, time budgets, break reminders, pause, per-game controls, local deletion UI
-- [ ] On-device OS recovery/auth, long-running screen time, background and timezone behavior verification
+## Phase 6 — QA/builds
+- [x] Pure game generator/property tests, persistence SQL contract tests, app config/asset contract tests.
+- [x] GitHub quality workflow runs full-project TypeScript checks, tests and an offline Android export.
+- [x] Previous standalone Android release v0.2 packaged and linked from GitHub Releases.
+- [x] User confirmed earlier standalone WonderNest build opened successfully on Android phone.
+- [ ] Android emulator offline-startup smoke: rerun underway after fixing UI-dump file permission issue.
+- [ ] Current v0.3 APK build: run 43574246270; its conclusion must be verified.
+- [ ] Automated end-to-end React Native UI tests and representative physical-device coverage.
+- [ ] Android cold startup, memory, battery, TalkBack and performance measurements.
 
-## Phase 8 — polish
-- [x] 5 original themed art backgrounds, fox mascot, icon, splash, feature graphic
-- [x] Bundled notes, cues and music; 3 matching translation key catalogs
-- [ ] Confirm correct pronunciation and narration in all languages using real offline Android voices
-- [ ] Original object illustrations, accessibility audit, fluent language review
+## Phase 7 — Store publishing
+- [x] Draft store listing (English, Hindi, Marathi), icon and original 1024x500 feature graphic.
+- [x] Draft privacy policy based on local-only design.
+- [ ] Real user-interface screenshots from tested APK.
+- [ ] Final merged manifest / software-supply-chain and vulnerability audit.
+- [ ] Verified name/trademark, developer identity, parent support email and hosted privacy policy.
+- [ ] Durable signing credentials and production Android App Bundle build.
+- [ ] Play Console target audience, rating, Data safety, age declaration and required closed tests.
+- [ ] Required external legal review and Google Play publication approval.
 
-## Phase 9 — QA
-- [x] 44 JavaScript core/security/i18n tests passed
-- [x] 4 Python SQLite contract tests passed
-- [x] 4 Python image/WAV/Android config contract tests passed
-- [x] Core TypeScript strict checks and application TSX syntax parse passed
-- [ ] Full React Native type-check / native build / emulator and physical Android UI tests
-- [ ] Manual low-end performance, stress, offline, privacy and security audits
-
-## Phase 10 — production / publishing
-- [x] API 36 target declared in Expo configuration; backup disabled in source config
-- [x] Policy/privacy draft, store listing draft, QA instructions, icon/feature graphic
-- [ ] Verify merged manifest, signing, package uniqueness and Android AAB/APK builds
-- [ ] Original app name clearance, public policy and support URL, genuine device screenshots
-- [ ] Play Console owner verification, closed tests, child-policy declarations, content rating, app approval
-
-## Current sign-off decision
-**NOT RELEASE READY.** Source is substantially developed but has not passed native integration/build, physical-device, full accessibility, legal or Play Console checks. See `docs/RELEASE_STATUS.md` and `docs/FEATURE_MATRIX.md`.
+**Acceptance decision: Development progressing with working test builds; do not label 100% complete or Google Play-ready until the remaining tests, original-art/narration features, and external release requirements are satisfied.**
