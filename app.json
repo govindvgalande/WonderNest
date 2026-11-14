@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "WonderNest",
+    "slug": "wondernest-memory-adventure",
+    "scheme": "wondernest",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
+        }
+      ],
+      "expo-local-authentication",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 37,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "37.0.0"
+          }
+        }
+      ]
+    ],
+    "android": {
+      "package": "com.wondernest.memoryadventure",
+      "versionCode": 1,
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "com.google.android.gms.permission.AD_ID"
+      ],
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#E7F7EA",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "allowBackup": false
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "privacy": "offline-local-only"
+    },
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E7F7EA"
+    }
+  }
+}

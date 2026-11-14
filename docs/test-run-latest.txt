@@ -1,0 +1,296 @@
+
+> wondernest-kids-memory-adventure@0.1.0 test:core
+> bash tools/test-core.sh
+
+TAP version 13
+# Subtest: cards 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 1 - cards 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 17.462889
+  type: 'test'
+  ...
+# Subtest: objects 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 2 - objects 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 6.374207
+  type: 'test'
+  ...
+# Subtest: pattern 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 3 - pattern 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.778743
+  type: 'test'
+  ...
+# Subtest: missing 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 4 - missing 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.808968
+  type: 'test'
+  ...
+# Subtest: treasure 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 5 - treasure 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 6.014183
+  type: 'test'
+  ...
+# Subtest: sounds 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 6 - sounds 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.023402
+  type: 'test'
+  ...
+# Subtest: detective 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 7 - detective 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.71614
+  type: 'test'
+  ...
+# Subtest: story 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 8 - story 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 3.845415
+  type: 'test'
+  ...
+# Subtest: shapes 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 9 - shapes 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 3.245796
+  type: 'test'
+  ...
+# Subtest: order 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 10 - order 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.769439
+  type: 'test'
+  ...
+# Subtest: maze 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 11 - maze 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 5.208457
+  type: 'test'
+  ...
+# Subtest: explorer 3-5: 250 deterministic valid generated puzzles with correct solutions
+ok 12 - explorer 3-5: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.833904
+  type: 'test'
+  ...
+# Subtest: adaptive bounded, deterministic: 3-5
+ok 13 - adaptive bounded, deterministic: 3-5
+  ---
+  duration_ms: 0.501284
+  type: 'test'
+  ...
+# Subtest: cards 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 14 - cards 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 4.384565
+  type: 'test'
+  ...
+# Subtest: objects 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 15 - objects 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.833819
+  type: 'test'
+  ...
+# Subtest: pattern 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 16 - pattern 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 1.904987
+  type: 'test'
+  ...
+# Subtest: missing 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 17 - missing 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.296136
+  type: 'test'
+  ...
+# Subtest: treasure 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 18 - treasure 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 7.576571
+  type: 'test'
+  ...
+# Subtest: sounds 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 19 - sounds 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.884299
+  type: 'test'
+  ...
+# Subtest: detective 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 20 - detective 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 3.310492
+  type: 'test'
+  ...
+# Subtest: story 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 21 - story 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 4.944336
+  type: 'test'
+  ...
+# Subtest: shapes 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 22 - shapes 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 3.42386
+  type: 'test'
+  ...
+# Subtest: order 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 23 - order 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.693887
+  type: 'test'
+  ...
+# Subtest: maze 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 24 - maze 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 6.758096
+  type: 'test'
+  ...
+# Subtest: explorer 6-8: 250 deterministic valid generated puzzles with correct solutions
+ok 25 - explorer 6-8: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.590443
+  type: 'test'
+  ...
+# Subtest: adaptive bounded, deterministic: 6-8
+ok 26 - adaptive bounded, deterministic: 6-8
+  ---
+  duration_ms: 0.129462
+  type: 'test'
+  ...
+# Subtest: cards 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 27 - cards 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 3.860478
+  type: 'test'
+  ...
+# Subtest: objects 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 28 - objects 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.164642
+  type: 'test'
+  ...
+# Subtest: pattern 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 29 - pattern 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.028319
+  type: 'test'
+  ...
+# Subtest: missing 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 30 - missing 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.703811
+  type: 'test'
+  ...
+# Subtest: treasure 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 31 - treasure 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 4.382282
+  type: 'test'
+  ...
+# Subtest: sounds 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 32 - sounds 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 1.94785
+  type: 'test'
+  ...
+# Subtest: detective 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 33 - detective 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 1.923634
+  type: 'test'
+  ...
+# Subtest: story 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 34 - story 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 3.001593
+  type: 'test'
+  ...
+# Subtest: shapes 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 35 - shapes 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.525216
+  type: 'test'
+  ...
+# Subtest: order 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 36 - order 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 2.503825
+  type: 'test'
+  ...
+# Subtest: maze 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 37 - maze 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 8.398871
+  type: 'test'
+  ...
+# Subtest: explorer 9-12: 250 deterministic valid generated puzzles with correct solutions
+ok 38 - explorer 9-12: 250 deterministic valid generated puzzles with correct solutions
+  ---
+  duration_ms: 3.757895
+  type: 'test'
+  ...
+# Subtest: adaptive bounded, deterministic: 9-12
+ok 39 - adaptive bounded, deterministic: 9-12
+  ---
+  duration_ms: 0.258704
+  type: 'test'
+  ...
+# Subtest: usage bounds and limits, no negative usage
+ok 40 - usage bounds and limits, no negative usage
+  ---
+  duration_ms: 0.785125
+  type: 'test'
+  ...
+# Subtest: reward requirements deterministic, no unintended awards
+ok 41 - reward requirements deterministic, no unintended awards
+  ---
+  duration_ms: 0.157354
+  type: 'test'
+  ...
+# Subtest: Play-hour boundaries work and support crossing midnight
+ok 42 - Play-hour boundaries work and support crossing midnight
+  ---
+  duration_ms: 0.271483
+  type: 'test'
+  ...
+# Subtest: Three text catalogs have identical keys and nonempty translations
+ok 43 - Three text catalogs have identical keys and nonempty translations
+  ---
+  duration_ms: 2.417246
+  type: 'test'
+  ...
+# Subtest: parent gate: six digits, correct/wrong unlock, persisted lockout, device recovery
+ok 44 - parent gate: six digits, correct/wrong unlock, persisted lockout, device recovery
+  ---
+  duration_ms: 2.772373
+  type: 'test'
+  ...
+1..44
+# tests 44
+# suites 0
+# pass 44
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 240.54233
+test_profile_deletion_cascades (__main__.TestSQLiteContracts.test_profile_deletion_cascades) ... ok
+test_schema_and_migration (__main__.TestSQLiteContracts.test_schema_and_migration) ... ok
+test_transaction_rolls_back_partial_progress (__main__.TestSQLiteContracts.test_transaction_rolls_back_partial_progress) ... ok
+test_uniqueness_and_daily_usage_atomic_upsert (__main__.TestSQLiteContracts.test_uniqueness_and_daily_usage_atomic_upsert) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+OK
+test_android_config_has_local_only_guardrails (__main__.TestReleaseAssets.test_android_config_has_local_only_guardrails) ... ok
+test_dimensions (__main__.TestReleaseAssets.test_dimensions) ... ok
+test_expo_bundle_configuration (__main__.TestReleaseAssets.test_expo_bundle_configuration) ... ok
+test_sound_files_are_decodable (__main__.TestReleaseAssets.test_sound_files_are_decodable) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK
