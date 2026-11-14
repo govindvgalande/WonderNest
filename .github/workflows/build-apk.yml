@@ -1,9 +1,14 @@
-name: Build WonderNest APK (from ZIP)
+name: Build WonderNest Standalone APK from Verified Source
 on:
   push:
     branches: [main]
     paths:
-      - "WonderNest*.zip"
+      - "src/**"
+      - "app/**"
+      - "tests/**"
+      - "assets/**"
+      - "package.json"
+      - "app.json"
       - ".github/workflows/build-apk.yml"
   workflow_dispatch:
 
@@ -18,18 +23,13 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Extract uploaded WonderNest source ZIP
+      - name: Use verified editable WonderNest application source
         shell: bash
         run: |
           set -euo pipefail
-          ZIP_FILE="$(find . -maxdepth 1 -type f -name 'WonderNest*.zip' | sort | head -n 1)"
-          if [ -z "$ZIP_FILE" ]; then
-            echo "::error::Upload WonderNest_Android_Project_Ready_To_Upload.zip to the root of this repository"
-            exit 1
-          fi
-          unzip -q "$ZIP_FILE" -d extracted
-          test -f extracted/WonderNest/package.json || { echo "::error::ZIP does not contain WonderNest/package.json"; exit 1; }
-          echo "APP_DIR=extracted/WonderNest" >> "$GITHUB_ENV"
+          test -f package.json && test -f app.json
+          echo "APP_DIR=." >> "$GITHUB_ENV"
+          echo "Building source currently committed on main, not the old uploaded ZIP"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -71,11 +71,13 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: npm install --no-audit --no-fund
 
-      - name: Check types and core logic
+      - name: Check types, game logic, database migrations and assets
         working-directory: ${{ env.APP_DIR }}
         run: |
           npm run check
           npm run test:core
+          python3 tests/sqlite_contract.test.py
+          python3 tests/assets_config_contract.test.py
 
       - name: Generate native Android project
         working-directory: ${{ env.APP_DIR }}
@@ -98,7 +100,7 @@ jobs:
       - name: Upload WonderNest APK
         uses: actions/upload-artifact@v4
         with:
-          name: WonderNest-Standalone-APK
+          name: WonderNest-Updated-Standalone-APK
           path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
