@@ -1,0 +1,35 @@
+name: WonderNest Quality Gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'app/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'app.json'
+      - '.github/workflows/quality.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.1'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run check
+      - name: Deterministic game, adaptive, and timer tests
+        run: npm run test:core
+      - name: SQLite schema and migration tests
+        run: python3 tests/sqlite_contract.test.py
+      - name: Assets and Android configuration tests
+        run: python3 tests/assets_config_contract.test.py
+      - name: Bundle JavaScript and assets for offline Android use
+        run: npx expo export --platform android --output-dir /tmp/wondernest-export
