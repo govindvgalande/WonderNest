@@ -29,7 +29,17 @@ export default function Parent(){
  async function authenticate(){try{const result=await verifyParentPin(pin);if(result.ok){setAuthenticated(true);setError('');a.refresh();}else setError(result.lockedSeconds?`${text('locked')} (${result.lockedSeconds}s)`:text('invalidPin'));}catch(e){setError(String(e));}}
  async function recover(){try{const ok=await recoverParentPinUsingDeviceLock(pin);setError(ok?text('pinUpdated'):text('gateHelp'));setRecovering(false);}catch(e){setError(String(e));}}
  const confirmProfileDelete=(p:Profile)=>Alert.alert(text('deleteProfile'),text('deleteConfirm'),[{text:text('cancel'),style:'cancel'},{text:text('yesDelete'),style:'destructive',onPress:()=>{a.removeProfile(p.id);setEditing(null);}}]);
- const deleteAll=()=>Alert.alert(text('resetAll'),text('deleteAllConfirm'),[{text:text('cancel'),style:'cancel'},{text:text('yesDelete'),style:'destructive',onPress:()=>{a.wipe();a.refresh();setTab('dashboard');}}]);
+ const deleteAll=()=>Alert.alert(text('resetAll'),text('deleteAllConfirm'),[{text:text('cancel'),style:'cancel'},{text:text('yesDelete'),style:'destructive',onPress:()=>{void(async()=>{
+  try{
+   // Keep a successful parent authentication mandatory; erase both SQLite
+   // learning data and SecureStore PIN before returning to onboarding.
+   a.wipe();
+   await clearParentCredentials();
+   await a.refreshGate();
+   setAuthenticated(false);setTab('dashboard');
+   router.replace('/');
+  }catch(e){Alert.alert(text('errorTitle'),String(e));}
+ })();}}]);
  if(!authenticated)return <Page title={`🔒 ${text('parentArea')}`} subtitle={text('gateHelp')}><Card><Head>{recovering?text('pinRecovery'):text('enterPin')}</Head><Entry testID="parent-pin" value={pin} onChangeText={setPin} placeholder={text('enterPin')} secure numeric/>{error?<P style={{color:C.red}}>{error}</P>:null}<Action testID="parent-unlock" label={recovering?text('recover'):text('unlock')} onPress={()=>void(recovering?recover():authenticate())}/><Action kind="soft" label={recovering?text('back'):text('recover')} onPress={()=>{setRecovering(!recovering);setError('');}}/></Card><Action kind="soft" label={text('home')} onPress={()=>router.replace('/')}/></Page>;
  const tabs:[Tab,string,string][]=[['dashboard','parentDashboard','🏡'],['children','management','👧'],['limits','screenTime','⏰'],['learning','learning','📚'],['settings','settings','⚙️'],['privacy','privacy','🔒'],['help','support','❔']];
  return <Page title={text('parentDashboard')}><Action kind="soft" label={text('home')} onPress={()=>router.replace('/')}/>
