@@ -1,0 +1,63 @@
+name: WonderNest Native Android Offline Startup Smoke Test
+on:
+  workflow_run:
+    workflows:
+      - Build WonderNest Standalone APK from Verified Source
+    types:
+      - completed
+permissions:
+  actions: read
+  contents: read
+jobs:
+  android-offline-startup:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_sha == '3e7295cfa09651a0765af312619a9ae267f3356d' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Download new installable APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          mkdir -p downloaded
+          gh run download "$RUN_ID" --repo "$GH_REPO" --name WonderNest-v0.2.0-Installable-APK --dir downloaded
+          test -s downloaded/app-release.apk
+      - name: Emulator launch, offline restart and accessibility hierarchy smoke
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          script: |
+            set -e
+            adb install -r downloaded/app-release.apk
+            adb shell svc wifi disable
+            adb shell svc data disable || true
+            adb logcat -c
+            adb shell am force-stop com.wondernest.memoryadventure || true
+            adb shell monkey -p com.wondernest.memoryadventure 1
+            sleep 15
+            adb shell uiautomator dump /sdcard/window.xml
+            adb pull /sdcard/window.xml WonderNest-emulator-ui.xml
+            adb exec-out screencap -p > WonderNest-emulator-screenshot.png
+            adb logcat -d -s AndroidRuntime:E ReactNativeJS:E > WonderNest-emulator-errors.log
+            if grep -E 'FATAL EXCEPTION|Unable to load script|Cannot find module' WonderNest-emulator-errors.log; then
+              echo "::error::A startup crash or missing JS bundle was detected"
+              exit 1
+            fi
+            grep -qi 'WonderNest' WonderNest-emulator-ui.xml
+            echo 'PASS: standalone Android app opened in airplane-like offline environment and displayed WonderNest content'
+      - name: Attach actual emulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WonderNest-v0.2.0-Emulator-Startup-Evidence
+          path: |
+            WonderNest-emulator-ui.xml
+            WonderNest-emulator-screenshot.png
+            WonderNest-emulator-errors.log
+          if-no-files-found: warn
+          retention-days: 30
