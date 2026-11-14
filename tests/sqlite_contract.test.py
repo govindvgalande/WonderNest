@@ -12,19 +12,30 @@ class TestSQLiteContracts(unittest.TestCase):
   self.db.execute('PRAGMA foreign_keys=ON')
   self.db.executescript(schema)
   self.db.executescript("ALTER TABLE profiles ADD COLUMN disabled_games TEXT NOT NULL DEFAULT '[]'; PRAGMA user_version=2;")
+  self.db.executescript("""
+    CREATE TABLE IF NOT EXISTS active_runs (
+      profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      game_id TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY(profile_id,game_id)
+    );
+    PRAGMA user_version=3;
+  """)
   self.db.execute("INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?)",('p1','Little One','3-5','🦊',15,8,12345,'[]'))
  def tearDown(self):self.db.close()
  def test_schema_and_migration(self):
-  self.assertEqual(self.db.execute('PRAGMA user_version').fetchone()[0],2)
+  self.assertEqual(self.db.execute('PRAGMA user_version').fetchone()[0],3)
   tables={r[0] for r in self.db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-  self.assertTrue({'profiles','attempts','difficulty','rewards','usage_days','session_state','settings'}.issubset(tables))
+  self.assertTrue({'profiles','attempts','difficulty','rewards','usage_days','session_state','settings','active_runs'}.issubset(tables))
  def test_profile_deletion_cascades(self):
   self.db.execute('INSERT INTO attempts(profile_id,game_id,seed,level,correct,mistakes,hints,duration_sec,created_at) VALUES(?,?,?,?,?,?,?,?,?)',('p1','cards',4,1,1,0,0,30,12345))
   self.db.execute("INSERT INTO rewards VALUES ('p1','first_adventure',123)")
   self.db.execute("INSERT INTO usage_days VALUES ('p1','2026-11-14',50)")
   self.db.execute("INSERT INTO difficulty VALUES ('p1','cards','{}')")
+  self.db.execute("INSERT INTO active_runs VALUES ('p1','cards','{}',12345)")
   self.db.execute('DELETE FROM profiles WHERE id=?',('p1',))
-  for table in ['attempts','rewards','usage_days','difficulty']:
+  for table in ['attempts','rewards','usage_days','difficulty','active_runs']:
    self.assertEqual(self.db.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0],0,table)
  def test_uniqueness_and_daily_usage_atomic_upsert(self):
   for i in [5,5,2]:
