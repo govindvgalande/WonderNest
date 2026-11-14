@@ -121,6 +121,10 @@ export function validateChallenge(c:Challenge):boolean{
     const nums=c.answer.map(x=>Number(x.replace('cell:','')));
     if(nums.some(x=>!Number.isInteger(x)||x<0||x>=c.gridSize!*c.gridSize!))return false;
     if(new Set(nums).size!==nums.length)return false;
+    if(c.mode==='maze'){
+      if(!c.board||new Set(c.board).size!==c.board.length||
+        !c.board.every(x=>c.options.includes(x))||!c.answer.every(x=>c.board!.includes(x)))return false;
+    }
     return nums.every((n,i)=>i===0||adjacent(n,nums[i-1]!,c.gridSize!));
   }
   if(c.prompt==='story')return !!c.storyFrames?.some(x=>x.actor===c.cue&&x.object===c.answer[0]);
