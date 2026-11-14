@@ -26,6 +26,19 @@ class TestReleaseAssets(unittest.TestCase):
   self.assertFalse(cfg['allowBackup'])
   self.assertEqual(cfg['permissions'],[])
   self.assertTrue(any('AD_ID' in name for name in cfg['blockedPermissions']))
+  requiredBlocked={
+   'android.permission.RECORD_AUDIO',
+   'android.permission.CAMERA',
+   'android.permission.ACCESS_FINE_LOCATION',
+   'android.permission.ACCESS_COARSE_LOCATION',
+   'android.permission.SYSTEM_ALERT_WINDOW',
+   'android.permission.READ_EXTERNAL_STORAGE',
+   'android.permission.WRITE_EXTERNAL_STORAGE',
+   'android.permission.ACCESS_NETWORK_STATE',
+   'android.permission.INTERNET',
+   'android.permission.WAKE_LOCK'
+  }
+  self.assertTrue(requiredBlocked.issubset(set(cfg['blockedPermissions'])))
   build=json.loads((BASE/'app.json').read_text())['expo']['plugins']
   for plugin in build:
    if isinstance(plugin,list) and plugin[0]=='expo-build-properties':
