@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
-import type {AgeGroup,Attempt,DifficultyState,GameId,Profile,Progress,Settings} from '../core/types';
+import type {AgeGroup,Attempt,Challenge,DifficultyState,GameId,Profile,Progress,Settings} from '../core/types';
+import {generateChallenge,validateChallenge} from '../core/generate';
 import {AGE_BOUNDS} from '../core/catalog';
 import {initialDifficulty,nextDifficulty} from '../core/adaptive';
 import {earnedBadges} from '../core/rewards';
@@ -27,6 +28,15 @@ export function initDatabase(){
   }
   if(version<2){
     db.execSync("ALTER TABLE profiles ADD COLUMN disabled_games TEXT NOT NULL DEFAULT '[]'; PRAGMA user_version=2;");
+  }
+  if(version<3){
+    db.execSync(`CREATE TABLE IF NOT EXISTS active_runs (
+      profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      game_id TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY(profile_id,game_id)
+    ); PRAGMA user_version=3;`);
   }
   initialized=true;
 }
@@ -84,3 +94,48 @@ export function isAllowed(profile:Profile,settings:Settings,when=Date.now()):boo
 }
 export function getSelectedProfileId():string|null{initDatabase();return db.getFirstSync<{value:string}>('SELECT value FROM settings WHERE key=?','selected_profile')?.value||null;}
 export function setSelectedProfileId(id:string|null){initDatabase();if(id)db.runSync('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value','selected_profile',id);else db.runSync('DELETE FROM settings WHERE key=?','selected_profile');}
+
+/** An unfinished puzzle is persisted locally, including its answer state.
+ * This allows a child to resume the same challenge after Android terminates the app. */
+export interface ActiveRun {
+  challenge: Challenge;
+  phase: 'preview'|'answer';
+  chosen: string[];
+  matched: number[];
+  mistakes: number;
+  hints: number;
+  startedAt: number;
+}
+export function saveActiveRun(profileId:string,gameId:GameId,run:ActiveRun):void{
+  initDatabase();
+  if(run.challenge.gameId!==gameId||!validateChallenge(run.challenge))throw new Error('Invalid active puzzle');
+  db.runSync('INSERT INTO active_runs(profile_id,game_id,payload,updated_at) VALUES(?,?,?,?) ON CONFLICT(profile_id,game_id) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at',
+    profileId,gameId,JSON.stringify(run),Date.now());
+}
+export function getActiveRun(profileId:string,gameId:GameId,ageGroup:AgeGroup):ActiveRun|null{
+  initDatabase();
+  const row=db.getFirstSync<{payload:string}>('SELECT payload FROM active_runs WHERE profile_id=? AND game_id=?',profileId,gameId);
+  if(!row)return null;
+  try{
+    const run=JSON.parse(row.payload) as ActiveRun;
+    const c=run.challenge;
+    if(c.gameId!==gameId||c.ageGroup!==ageGroup||!validateChallenge(c)||
+      !['preview','answer'].includes(run.phase)||
+      !Array.isArray(run.chosen)||!Array.isArray(run.matched)||
+      !run.chosen.every(x=>typeof x==='string'&&c.options.includes(x))||
+      !run.matched.every(x=>Number.isInteger(x)&&x>=0&&x<(c.board?.length||0))||
+      !Number.isInteger(run.mistakes)||run.mistakes<0||
+      !Number.isInteger(run.hints)||run.hints<0||
+      !Number.isFinite(run.startedAt)||run.startedAt>Date.now())throw new Error('Invalid saved state');
+    const regen=generateChallenge(gameId,ageGroup,c.level,c.seed);
+    if(JSON.stringify(c)!==JSON.stringify(regen))throw new Error('Stored challenge differs from generator');
+    return run;
+  }catch{
+    clearActiveRun(profileId,gameId);
+    return null;
+  }
+}
+export function clearActiveRun(profileId:string,gameId:GameId):void{
+  initDatabase();
+  db.runSync('DELETE FROM active_runs WHERE profile_id=? AND game_id=?',profileId,gameId);
+}
