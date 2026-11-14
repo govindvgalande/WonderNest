@@ -3,20 +3,25 @@ import {pick,random,sample,shuffle} from './random';
 import type {AgeGroup,Challenge,GameId} from './types';
 const adjacent=(a:number,b:number,n:number)=>Math.abs(Math.floor(a/n)-Math.floor(b/n))+Math.abs(a%n-b%n)===1;
 const neighbors=(at:number,size:number)=>[at-size,at+size,at%size?at-1:-1,at%size<size-1?at+1:-1].filter(x=>x>=0&&x<size*size);
+/** Seeded depth-first search produces the full requested route or fails closed.
+ * Induced maze paths cannot touch earlier path squares except the predecessor. */
 function route(size:number,length:number,rng:()=>number,induced:boolean):number[]{
-  let best=[0];
-  for(let trial=0;trial<80;trial++){
-    const path=[0];
-    while(path.length<length){
-      const last=path[path.length-1]!;
-      const choices=shuffle(neighbors(last,size),rng).filter(n=>!path.includes(n)&&(!induced||path.slice(0,-1).every(old=>!adjacent(n,old,size))));
-      if(!choices.length)break;
-      path.push(choices[0]!);
+  if(!Number.isInteger(size)||size<2||!Number.isInteger(length)||length<2||length>size*size) throw new Error('Invalid route dimensions');
+  const path=[0],used=new Set<number>([0]);
+  const solve=():boolean=>{
+    if(path.length===length)return true;
+    const last=path[path.length-1]!;
+    for(const n of shuffle(neighbors(last,size),rng)){
+      if(used.has(n))continue;
+      if(induced&&path.slice(0,-1).some(x=>adjacent(n,x,size)))continue;
+      used.add(n);path.push(n);
+      if(solve())return true;
+      path.pop();used.delete(n);
     }
-    if(path.length>best.length) best=path;
-    if(path.length>=length)return path;
-  }
-  return best;
+    return false;
+  };
+  if(!solve())throw new Error('Unable to generate a complete solvable route');
+  return path;
 }
 function seqItems(count:number,source:readonly string[],rng:()=>number):string[]{return Array.from({length:count},()=>pick(source,rng));}
 /** All puzzle data is generated offline with seeded randomness; answers are part of the challenge. */
