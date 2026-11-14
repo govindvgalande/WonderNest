@@ -78,9 +78,13 @@ export function generateChallenge(gameId:GameId,ageGroup:AgeGroup,level:number,s
       return {...base,mode:'single',prompt:'story',preview:frames.map(x=>`${x.actor}:${x.object}:${x.place}`),storyFrames:frames,cue:actors[asked],options:shuffle([objs[asked]!,...objs.slice(count)],rng),answer:[objs[asked]!]};
     }
     case 'shapes':{
-      const count=howMany(2,ageGroup==='9-12'?9:ageGroup==='6-8'?6:4);
+      // Shape memory is a *spatial* board reconstruction, not another
+      // Simon-style sequential pattern game. Slots are read left-to-right.
+      const cols=ageGroup==='9-12'?3:ageGroup==='6-8'&&level>=4?3:2;
+      const max=cols*cols;
+      const count=Math.min(max,ageGroup==='3-5'?howMany(3,4):ageGroup==='6-8'?howMany(4,9):howMany(5,9));
       const items=seqItems(count,SHAPES,rng);
-      return {...base,mode:'sequence',prompt:'shapes',preview:items,options:[...SHAPES],answer:items};
+      return {...base,mode:'reconstruct',prompt:'shapes',preview:items,options:[...SHAPES],answer:items,gridSize:cols};
     }
     case 'order':{
       const count=howMany(3,ageGroup==='9-12'?9:ageGroup==='6-8'?7:5);
@@ -119,6 +123,9 @@ export function validateChallenge(c:Challenge):boolean{
     return [...counts.values()].every(n=>n===2);
   }
   if(c.mode==='multi')return new Set(c.answer).size===c.answer.length&&c.answer.every(x=>c.preview.includes(x));
+  if(c.mode==='reconstruct')return c.prompt==='shapes'&&[2,3].includes(c.gridSize||0)&&c.preview.length===c.answer.length&&
+    c.preview.length>=3&&c.preview.length<=c.gridSize!*c.gridSize!&&c.preview.every((x,i)=>x===c.answer[i])&&
+    c.answer.every(x=>SHAPES.includes(x as typeof SHAPES[number]));
   if(c.mode==='single' && c.prompt==='missing')return c.answer.length===1&&!c.board?.includes(c.answer[0]!);
   if((c.mode==='route'||c.mode==='maze')&&c.gridSize){
     const nums=c.answer.map(x=>Number(x.replace('cell:','')));
