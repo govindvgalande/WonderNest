@@ -53,6 +53,22 @@ for(const age of ['3-5','6-8','9-12'] as const){
     assert.equal(d.level,min);
   });
 }
+test('Brain Explorer never loses the instructions for a generated challenge',()=>{
+ for(const age of ['3-5','6-8','9-12'] as const){
+   for(let seed=0;seed<750;seed++){
+     const c=generateChallenge('explorer',age,AGE_BOUNDS[age].min,seed);
+     assert.ok(['recall','missing','repeat'].includes(c.prompt),`Unknown Explorer prompt: ${c.prompt}`);
+     if(c.mode==='single'){
+       assert.equal(c.prompt,'missing');
+       assert.ok(c.board?.length);
+       assert.equal(c.board?.includes(c.answer[0]!),false);
+     }
+     if(c.mode==='multi')assert.equal(c.prompt,'recall');
+     if(c.mode==='sequence')assert.equal(c.prompt,'repeat');
+     assert.ok(validateChallenge(c));
+   }
+ }
+});
 test('usage bounds and limits, no negative usage',()=>{
   assert.equal(heartbeatDelta(1000,6300),5);assert.equal(heartbeatDelta(9000,1000),0);
   assert.equal(canPlay({profileUsed:899,householdUsed:899,sessionUsed:100,dailyLimitMin:15,householdLimitMin:20,sessionLimitMin:5,paused:false}),true);
