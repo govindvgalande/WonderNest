@@ -81,16 +81,24 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: npx expo prebuild --platform android --no-install --non-interactive --clean
 
-      - name: Compile installable Android APK
+      - name: Compile standalone Android APK (include offline JavaScript)
         working-directory: ${{ env.APP_DIR }}/android
+        env:
+          CI: "1"
         run: |
+          set -euo pipefail
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+          APK="app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK" || { echo "::error::Signed release APK was not produced"; exit 1; }
+          unzip -l "$APK" | grep -q 'assets/index.android.bundle' || { echo "::error::Standalone JavaScript bundle is missing"; exit 1; }
+          echo "Verified: standalone APK includes the React Native JavaScript bundle."
+          ls -lh "$APK"
 
       - name: Upload WonderNest APK
         uses: actions/upload-artifact@v4
         with:
-          name: WonderNest-Installable-APK
-          path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/debug/app-debug.apk
+          name: WonderNest-Standalone-APK
+          path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
