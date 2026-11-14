@@ -1,0 +1,54 @@
+name: WonderNest APK Manifest And Permission Audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/audit-android-apk.yml"
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  inspect-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download verified standalone APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p apk
+          gh run download 43567509391 --repo "$GH_REPO" --name WonderNest-v0.2.0-Installable-APK --dir apk
+          test -s apk/app-release.apk
+      - name: Verify declared target API and dangerous permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          test -x "$AAPT"
+          "$AAPT" dump badging apk/app-release.apk > WonderNest-android-manifest-badging.txt
+          "$AAPT" dump permissions apk/app-release.apk > WonderNest-android-permissions.txt
+          cat WonderNest-android-permissions.txt
+          grep -F "targetSdkVersion:'36'" WonderNest-android-manifest-badging.txt
+          for forbidden in RECORD_AUDIO CAMERA ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION READ_CONTACTS WRITE_CONTACTS READ_PHONE_STATE AD_ID; do
+            if grep -E "uses-permission:.*\\b${forbidden}\\b" WonderNest-android-permissions.txt; then
+              echo "::error::Unexpected dangerous permission: ${forbidden}"
+              exit 1
+            fi
+          done
+          unzip -Z -1 apk/app-release.apk | grep -F 'assets/index.android.bundle'
+          sha256sum apk/app-release.apk > WonderNest-apk-sha256.txt
+          echo 'PASS: API target and declared dangerous permission inspection.'
+      - name: Upload manifest and APK audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WonderNest-APK-Manifest-Audit-Evidence
+          path: |
+            WonderNest-android-manifest-badging.txt
+            WonderNest-android-permissions.txt
+            WonderNest-apk-sha256.txt
+          if-no-files-found: warn
+          retention-days: 30
