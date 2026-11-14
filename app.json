@@ -3,7 +3,7 @@
     "name": "WonderNest",
     "slug": "wondernest-memory-adventure",
     "scheme": "wondernest",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -34,7 +34,7 @@
     ],
     "android": {
       "package": "com.wondernest.memoryadventure",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
