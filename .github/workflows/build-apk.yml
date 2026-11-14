@@ -3,14 +3,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "src/**"
-      - "app/**"
-      - "tests/**"
-      - "assets/**"
-      - "package.json"
-      - "app.json"
       - ".github/workflows/build-apk.yml"
   workflow_dispatch:
+
+concurrency:
+  group: wondernest-android-standalone-main
+  cancel-in-progress: true
 
 permissions:
   contents: read
