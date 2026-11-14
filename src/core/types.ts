@@ -2,7 +2,7 @@ export const GAME_IDS = ['cards','objects','pattern','missing','treasure','sound
 export type GameId = typeof GAME_IDS[number];
 export type AgeGroup = '3-5'|'6-8'|'9-12';
 export type Locale = 'en'|'hi'|'mr';
-export type Variant = 'cards'|'multi'|'sequence'|'single'|'route'|'maze';
+export type Variant = 'cards'|'multi'|'sequence'|'reconstruct'|'single'|'route'|'maze';
 export type TokenId = string;
 export type PromptId = 'match'|'recall'|'repeat'|'missing'|'route'|'sound'|'observe'|'story'|'shapes'|'order'|'maze'|'explore';
 export interface Challenge {
