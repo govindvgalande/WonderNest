@@ -36,7 +36,7 @@ jobs:
           set -euo pipefail
           gh release create v0.3.0-preview \
             WonderNest-v0.3.0.apk WonderNest-v0.3.0-Compressed.zip \
-            --repo "$GH_REPO" --target "3948ba84edff694a14c357ff4435d1c1e8f84f04" \
+            --repo "$GH_REPO" --target main \
             --title "WonderNest v0.3.0 - Android Preview Test Build" \
-            --notes "Standalone Android preview including first-play tutorial, spatial shape memory, audio-first sound game, deterministic complete mazes, shared family time budgets, and improved child-parent controls. Tested in CI; not certified for Google Play, child policy, or full UI/device coverage. Existing locally saved data can be lost if the installer needs the old build uninstalled." \
+            --notes "APK source commit: 3948ba84edff694a14c357ff4435d1c1e8f84f04. Standalone Android preview including first-play tutorial, spatial shape memory, audio-first sound game, deterministic complete mazes, shared family time budgets, and improved child-parent controls. Tested in CI; not certified for Google Play, child policy, or full UI/device coverage. Existing locally saved data can be lost if the installer needs the old build uninstalled." \
             --prerelease
