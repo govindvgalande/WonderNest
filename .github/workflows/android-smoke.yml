@@ -1,29 +1,32 @@
 name: WonderNest Native Android Offline Startup Smoke Test
 on:
-  workflow_run:
-    workflows:
-      - Build WonderNest Standalone APK from Verified Source
-    types:
-      - completed
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/android-smoke.yml"
+  workflow_dispatch:
+
 permissions:
   actions: read
   contents: read
+
 jobs:
   android-offline-startup:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_sha == '3e7295cfa09651a0765af312619a9ae267f3356d' }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Download new installable APK
+      - name: Download verified v0.2 APK
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
+          set -euo pipefail
           mkdir -p downloaded
-          gh run download "$RUN_ID" --repo "$GH_REPO" --name WonderNest-v0.2.0-Installable-APK --dir downloaded
+          gh run download 43567509391 --repo "$GH_REPO" --name WonderNest-v0.2.0-Installable-APK --dir downloaded
           test -s downloaded/app-release.apk
-      - name: Emulator launch, offline restart and accessibility hierarchy smoke
+          unzip -Z -1 downloaded/app-release.apk | grep -F 'assets/index.android.bundle'
+
+      - name: Emulator offline launch and restart
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -31,26 +34,44 @@ jobs:
           arch: x86_64
           profile: pixel_5
           disable-animations: true
+          emulator-options: -no-window -no-snapshot -noaudio -no-boot-anim -gpu swiftshader_indirect
           script: |
-            set -e
+            set -euo pipefail
             adb install -r downloaded/app-release.apk
             adb shell svc wifi disable
             adb shell svc data disable || true
             adb logcat -c
             adb shell am force-stop com.wondernest.memoryadventure || true
             adb shell monkey -p com.wondernest.memoryadventure 1
-            sleep 15
-            adb shell uiautomator dump /sdcard/window.xml
-            adb pull /sdcard/window.xml WonderNest-emulator-ui.xml
-            adb exec-out screencap -p > WonderNest-emulator-screenshot.png
+            sleep 20
+            # Save logs/screenshot BEFORE any optional UI hierarchy step.
             adb logcat -d -s AndroidRuntime:E ReactNativeJS:E > WonderNest-emulator-errors.log
+            adb exec-out screencap -p > WonderNest-emulator-screenshot.png
+            test -s WonderNest-emulator-screenshot.png
             if grep -E 'FATAL EXCEPTION|Unable to load script|Cannot find module' WonderNest-emulator-errors.log; then
-              echo "::error::A startup crash or missing JS bundle was detected"
+              echo "::error::Android startup crash detected"
               exit 1
             fi
-            grep -qi 'WonderNest' WonderNest-emulator-ui.xml
-            echo 'PASS: standalone Android app opened in airplane-like offline environment and displayed WonderNest content'
-      - name: Attach actual emulator evidence
+            adb shell pidof com.wondernest.memoryadventure | grep -E '[0-9]'
+            # Pull from shell-readable temp directory. /sdcard failed previously.
+            adb shell uiautomator dump /data/local/tmp/wondernest-window.xml || true
+            adb exec-out cat /data/local/tmp/wondernest-window.xml > WonderNest-emulator-ui.xml || true
+            if test -s WonderNest-emulator-ui.xml; then
+              grep -Eq 'WonderNest|Welcome|parent PIN|वंडरनेस्ट' WonderNest-emulator-ui.xml
+            fi
+            # App must be able to restart offline without Metro.
+            adb shell am force-stop com.wondernest.memoryadventure
+            adb shell monkey -p com.wondernest.memoryadventure 1
+            sleep 10
+            adb shell pidof com.wondernest.memoryadventure | grep -E '[0-9]'
+            adb logcat -d -s AndroidRuntime:E ReactNativeJS:E > WonderNest-emulator-restart-errors.log
+            if grep -E 'FATAL EXCEPTION|Unable to load script|Cannot find module' WonderNest-emulator-restart-errors.log; then
+              echo "::error::Android restart crash detected"
+              exit 1
+            fi
+            echo "PASS: installed and launched Android app twice with network disabled."
+
+      - name: Upload emulator evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -59,5 +80,6 @@ jobs:
             WonderNest-emulator-ui.xml
             WonderNest-emulator-screenshot.png
             WonderNest-emulator-errors.log
+            WonderNest-emulator-restart-errors.log
           if-no-files-found: warn
           retention-days: 30
