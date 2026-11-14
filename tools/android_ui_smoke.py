@@ -62,16 +62,43 @@ def pick_node(root, label):
     candidates.sort(key=lambda x: x.attrib.get("clickable")!="true")
     return candidates[0]
 
+def screen_size():
+    output=adb("shell","wm","size")
+    sizes=re.findall(r"(?:Physical|Override) size:\\s*(\\d+)x(\\d+)", output)
+    if not sizes:
+        raise AssertionError(f"Could not determine Android device dimensions: {output}")
+    w,h=map(int,sizes[-1])
+    return w,h
+
+def swipe_up():
+    w,h=screen_size()
+    adb("shell","input","swipe",str(w//2),str(int(h*.77)),
+        str(w//2),str(int(h*.31)),"370")
+    time.sleep(.75)
+
 def tap(label):
-    root=must_see(label)
-    node=pick_node(root,label)
-    coords=list(map(int,re.findall(r"\d+",node.attrib["bounds"])))
-    if len(coords)!=4:
-        raise AssertionError(f"Invalid tap bounds for {label}: {node.attrib['bounds']}")
-    x=(coords[0]+coords[2])//2
-    y=(coords[1]+coords[3])//2
-    adb("shell","input","tap",str(x),str(y))
-    time.sleep(1.1)
+    w,h=screen_size()
+    last=[]
+    for attempt in range(12):
+        root=dump()
+        last=all_labels(root)
+        try:
+            node=pick_node(root,label)
+            coords=list(map(int,re.findall(r"\\d+",node.attrib["bounds"])))
+            if len(coords)!=4:
+                raise AssertionError(f"Invalid tap bounds for {label}: {node.attrib['bounds']}")
+            x=(coords[0]+coords[2])//2
+            y=(coords[1]+coords[3])//2
+            # UIAutomator may expose nodes that are partially scrolled offscreen.
+            # Only tap when the center is inside the safe visible viewport.
+            if 15<x<w-15 and 70<y<h-120:
+                adb("shell","input","tap",str(x),str(y))
+                time.sleep(1.25)
+                return
+        except AssertionError:
+            pass
+        swipe_up()
+    raise AssertionError(f"Cannot reach visible button {label!r}. Last UI: {last[:40]}")
 
 def edit(label, value):
     root=must_see(label)
@@ -116,7 +143,7 @@ def main():
     screenshot("WonderNest-guided-tutorial.png")
     print("PASS: Parent PIN setup, local child profile, guided first activity")
     tap("Try Memory Cards")
-    must_see("Memory Card Match")
+    must_see("Find the matching pairs")
     screenshot("WonderNest-memory-cards.png")
     tap("Helpful hint")
     print("PASS: Memory Card game launches and accepts help")
