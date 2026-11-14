@@ -60,18 +60,12 @@ jobs:
             exit 1
           fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --install "platforms;android-36" "build-tools;36.0.0" >/dev/null
-          node - <<'NODE'
-          const fs = require('fs');
-          const p = 'extracted/WonderNest/app.json';
-          const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-          const androidProperties = j.expo.plugins.find(x => Array.isArray(x) && x[0] === 'expo-build-properties');
-          if (!androidProperties) throw new Error('expo-build-properties plugin missing');
-          androidProperties[1].android.compileSdkVersion = 36;
-          androidProperties[1].android.targetSdkVersion = 36;
-          androidProperties[1].android.buildToolsVersion = '36.0.0';
-          fs.writeFileSync(p, JSON.stringify(j, null, 2));
-          NODE
+          "$SDKMANAGER" --install "platforms;android-36" "platforms;android-37.0" "build-tools;37.0.0" >/dev/null
+          # Android SDK 37 is distributed as android-37.0; some AGP versions resolve android-37.
+          test -d "$ANDROID_HOME/platforms/android-37.0"
+          if [ ! -e "$ANDROID_HOME/platforms/android-37" ]; then
+            ln -s "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
+          fi
 
       - name: Install project dependencies
         working-directory: ${{ env.APP_DIR }}
