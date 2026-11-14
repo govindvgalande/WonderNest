@@ -22,12 +22,21 @@ class TestSQLiteContracts(unittest.TestCase):
     );
     PRAGMA user_version=3;
   """)
+  self.db.executescript("""
+    CREATE TABLE IF NOT EXISTS household_session (
+      id INTEGER PRIMARY KEY CHECK(id=1),
+      day TEXT NOT NULL,
+      seconds INTEGER NOT NULL DEFAULT 0,
+      last_activity INTEGER NOT NULL DEFAULT 0
+    );
+    PRAGMA user_version=4;
+  """)
   self.db.execute("INSERT INTO profiles VALUES (?,?,?,?,?,?,?,?)",('p1','Little One','3-5','🦊',15,8,12345,'[]'))
  def tearDown(self):self.db.close()
  def test_schema_and_migration(self):
-  self.assertEqual(self.db.execute('PRAGMA user_version').fetchone()[0],3)
+  self.assertEqual(self.db.execute('PRAGMA user_version').fetchone()[0],4)
   tables={r[0] for r in self.db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-  self.assertTrue({'profiles','attempts','difficulty','rewards','usage_days','session_state','settings','active_runs'}.issubset(tables))
+  self.assertTrue({'profiles','attempts','difficulty','rewards','usage_days','session_state','settings','active_runs','household_session'}.issubset(tables))
  def test_profile_deletion_cascades(self):
   self.db.execute('INSERT INTO attempts(profile_id,game_id,seed,level,correct,mistakes,hints,duration_sec,created_at) VALUES(?,?,?,?,?,?,?,?,?)',('p1','cards',4,1,1,0,0,30,12345))
   self.db.execute("INSERT INTO rewards VALUES ('p1','first_adventure',123)")
