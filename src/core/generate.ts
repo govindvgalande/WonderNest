@@ -90,7 +90,15 @@ export function generateChallenge(gameId:GameId,ageGroup:AgeGroup,level:number,s
     case 'maze':{
       const size=ageGroup==='3-5'?3:ageGroup==='6-8'?4:5;
       const path=route(size,howMany(3,ageGroup==='9-12'?8:ageGroup==='6-8'?7:5),rng,true);
-      return {...base,mode:'maze',prompt:'maze',preview:path.map(x=>`cell:${x}`),options:Array.from({length:size*size},(_,i)=>`cell:${i}`),answer:path.map(x=>`cell:${x}`),board:path.map(x=>`cell:${x}`),gridSize:size};
+      // Include reproducible dead-end branches. Otherwise each visible corridor is
+      // the answer and the child need not remember the preview.
+      const open=new Set(path);
+      const candidates=shuffle(Array.from({length:size*size},(_,i)=>i).filter(n=>!open.has(n)),rng);
+      for(const cell of candidates){
+        if(neighbors(cell,size).filter(n=>open.has(n)).length===1&&rng()<0.68)open.add(cell);
+      }
+      const board=Array.from(open).sort((a,b)=>a-b).map(x=>`cell:${x}`);
+      return {...base,mode:'maze',prompt:'maze',preview:path.map(x=>`cell:${x}`),options:Array.from({length:size*size},(_,i)=>`cell:${i}`),answer:path.map(x=>`cell:${x}`),board,gridSize:size};
     }
     case 'explorer':{
       const selected=pick(['objects','missing','pattern'] as const,rng);
