@@ -38,6 +38,14 @@ export function initDatabase(){
       PRIMARY KEY(profile_id,game_id)
     ); PRAGMA user_version=3;`);
   }
+  if(version<4){
+    db.execSync(`CREATE TABLE IF NOT EXISTS household_session (
+      id INTEGER PRIMARY KEY CHECK(id=1),
+      day TEXT NOT NULL,
+      seconds INTEGER NOT NULL DEFAULT 0,
+      last_activity INTEGER NOT NULL DEFAULT 0
+    ); PRAGMA user_version=4;`);
+  }
   initialized=true;
 }
 function transact<T>(fn:()=>T):T{
@@ -54,7 +62,7 @@ export function createProfile(nickname:string,ageGroup:AgeGroup,avatar='🦊'):P
 }
 export function updateProfile(p:Profile){initDatabase();if(p.nickname.trim().length>18||p.dailyLimitMin<1||p.dailyLimitMin>240||p.sessionLimitMin<1||p.sessionLimitMin>120)throw new Error('Invalid profile');db.runSync('UPDATE profiles SET nickname=?,age_group=?,avatar=?,daily_limit=?,session_limit=?,disabled_games=? WHERE id=?',p.nickname.trim(),p.ageGroup,p.avatar,p.dailyLimitMin,p.sessionLimitMin,JSON.stringify(p.disabledGames),p.id);}
 export function deleteProfile(id:string){initDatabase();db.runSync('DELETE FROM profiles WHERE id=?',id);}
-export function deleteAllLocalData(){initDatabase();transact(()=>{db.execSync('DELETE FROM profiles; DELETE FROM settings;');});}
+export function deleteAllLocalData(){initDatabase();transact(()=>{db.execSync('DELETE FROM profiles; DELETE FROM settings; DELETE FROM household_session;');});}
 export function getSettings():Settings{initDatabase();const row=db.getFirstSync<{value:string}>('SELECT value FROM settings WHERE key=?','prefs');try{return {...initialSettings,...JSON.parse(row?.value||'{}')};}catch{return {...initialSettings};}}
 export function saveSettings(settings:Settings){initDatabase();db.runSync('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value','prefs',JSON.stringify(settings));}
 export function getDifficulty(profileId:string,gameId:GameId,age:AgeGroup):DifficultyState{initDatabase();const row=db.getFirstSync<{state_json:string}>('SELECT state_json FROM difficulty WHERE profile_id=? AND game_id=?',profileId,gameId);if(!row)return initialDifficulty(age);try{const value=JSON.parse(row.state_json) as DifficultyState;const b=AGE_BOUNDS[age];return {...value,level:Math.max(b.min,Math.min(b.max,value.level))};}catch{return initialDifficulty(age);}}
@@ -75,8 +83,10 @@ export function getUsage(profileId:string,when=Date.now()){
   initDatabase();const today=dayKey(when);const own=db.getFirstSync<{seconds:number}>('SELECT seconds FROM usage_days WHERE profile_id=? AND day=?',profileId,today)?.seconds||0;
   const total=db.getFirstSync<{seconds:number}>('SELECT COALESCE(SUM(seconds),0) AS seconds FROM usage_days WHERE day=?',today)?.seconds||0;
   const state=db.getFirstSync<{seconds:number;last_activity:number;day:string}>('SELECT seconds,last_activity,day FROM session_state WHERE profile_id=?',profileId);
-  const session=state && state.day===today && when-state.last_activity<300000 ? state.seconds : 0;
-  return {own,total,session};
+  const session=state && state.day===today && when-state.last_activity>=0 && when-state.last_activity<300000 ? state.seconds : 0;
+  const home=db.getFirstSync<{seconds:number;last_activity:number;day:string}>('SELECT seconds,last_activity,day FROM household_session WHERE id=1');
+  const householdSession=home&&home.day===today&&when-home.last_activity>=0&&when-home.last_activity<300000?home.seconds:0;
+  return {own,total,session,householdSession};
 }
 export function addForegroundUsage(profileId:string,seconds:number,when=Date.now()){
   initDatabase();if(!Number.isInteger(seconds)||seconds<0||seconds>5)throw new Error('Invalid heartbeat');if(seconds===0)return;
@@ -86,11 +96,14 @@ export function addForegroundUsage(profileId:string,seconds:number,when=Date.now
     const prior=db.getFirstSync<{seconds:number;last_activity:number;day:string}>('SELECT seconds,last_activity,day FROM session_state WHERE profile_id=?',profileId);
     const carried=prior&&prior.day===day&&when-prior.last_activity<300000?prior.seconds:0;
     db.runSync('INSERT INTO session_state(profile_id,day,seconds,last_activity) VALUES(?,?,?,?) ON CONFLICT(profile_id) DO UPDATE SET day=excluded.day,seconds=excluded.seconds,last_activity=excluded.last_activity',profileId,day,carried+seconds,when);
+    const household=db.getFirstSync<{seconds:number;last_activity:number;day:string}>('SELECT seconds,last_activity,day FROM household_session WHERE id=1');
+    const shared=household&&household.day===day&&when-household.last_activity>=0&&when-household.last_activity<300000?household.seconds:0;
+    db.runSync('INSERT INTO household_session(id,day,seconds,last_activity) VALUES(1,?,?,?) ON CONFLICT(id) DO UPDATE SET day=excluded.day,seconds=excluded.seconds,last_activity=excluded.last_activity',day,shared+seconds,when);
   });
 }
 export function isAllowed(profile:Profile,settings:Settings,when=Date.now()):boolean{
   const u=getUsage(profile.id,when);
-  return withinAllowedHours(settings.allowedFrom,settings.allowedUntil,when) && canPlay({profileUsed:u.own,householdUsed:u.total,sessionUsed:u.session,dailyLimitMin:profile.dailyLimitMin,householdLimitMin:settings.householdLimitMin,sessionLimitMin:profile.sessionLimitMin,paused:settings.paused});
+  return withinAllowedHours(settings.allowedFrom,settings.allowedUntil,when) && canPlay({profileUsed:u.own,householdUsed:u.total,sessionUsed:u.session,householdSessionUsed:u.householdSession,dailyLimitMin:profile.dailyLimitMin,householdLimitMin:settings.householdLimitMin,sessionLimitMin:profile.sessionLimitMin,paused:settings.paused});
 }
 export function getSelectedProfileId():string|null{initDatabase();return db.getFirstSync<{value:string}>('SELECT value FROM settings WHERE key=?','selected_profile')?.value||null;}
 export function setSelectedProfileId(id:string|null){initDatabase();if(id)db.runSync('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value','selected_profile',id);else db.runSync('DELETE FROM settings WHERE key=?','selected_profile');}
